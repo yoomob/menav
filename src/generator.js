@@ -303,6 +303,10 @@ function ensureConfigDefaults(config) {
   result.profile = result.profile || {};
   result.social = result.social || [];
   result.categories = result.categories || [];
+  // 图标配置默认值
+  result.icons = result.icons || {};
+  // icons.mode: manual | favicon, 默认 favicon
+  result.icons.mode = result.icons.mode || 'favicon';
 
   // 站点基本信息默认值
   result.site.title = result.site.title || 'MeNav导航';

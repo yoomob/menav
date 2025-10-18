@@ -919,9 +919,25 @@ body .content.expanded {
     transition: all 0.3s ease;
 }
 
+/* 网站卡片 favicon 图片样式，与图标尺寸保持一致 */
+.site-card .favicon-icon {
+    display: inline-block;
+    width: 1.8rem;
+    height: 1.8rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    object-fit: cover;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
 .site-card:hover i {
     transform: scale(1.1);
     color: var(--accent-hover);
+}
+
+.site-card:hover .favicon-icon {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 1px var(--border-color);
 }
 
 .site-card h3 {

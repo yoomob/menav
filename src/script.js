@@ -53,7 +53,8 @@ window.MeNav = {
                 element.setAttribute('data-description', newData.description);
             }
             if (newData.icon) {
-                const iconElement = element.querySelector('i');
+                // 优先更新站点卡片中的回退图标（favicon模式下存在）
+                const iconElement = element.querySelector('i.icon-fallback') || element.querySelector('i');
                 if (iconElement) {
                     iconElement.className = newData.icon;
                 }
@@ -178,15 +179,40 @@ window.MeNav = {
             newSite.setAttribute('data-icon', data.icon || 'fas fa-link');
             newSite.setAttribute('data-description', data.description || '');
 
-            // 添加内容
-            newSite.innerHTML = `
-                <i class="${data.icon || 'fas fa-link'}"></i>
-                <h3>${data.name || '未命名站点'}</h3>
-                <p>${data.description || ''}</p>
-            `;
+            // 添加内容（根据图标模式渲染）
+            try {
+                const cfg = window.MeNav && typeof window.MeNav.getConfig === 'function' ? window.MeNav.getConfig() : null;
+                const iconsMode = (cfg && (cfg.data?.icons?.mode || cfg.icons?.mode)) || 'favicon';
+                if (iconsMode === 'favicon' && data.url && /^https?:\/\//i.test(data.url)) {
+                    const faviconUrl = `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(data.url)}&size=32`;
+                    newSite.innerHTML = `
+                        <i class="fas fa-circle-notch fa-spin icon-placeholder" aria-hidden="true"></i>
+                        <img class="favicon-icon" src="${faviconUrl}" alt="${(data.name || '站点')} favicon" loading="lazy" style="opacity:0;"
+                             onload="this.style.opacity='1'; this.previousElementSibling.style.display='none';"
+                             onerror="this.style.display='none'; this.previousElementSibling.style.display='none'; this.nextElementSibling.style.display='inline-block';" />
+                        <i class="fas fa-link icon-fallback" aria-hidden="true" style="display:none;"></i>
+                        <h3>${data.name || '未命名站点'}</h3>
+                        <p>${data.description || ''}</p>
+                    `;
+                } else {
+                    newSite.innerHTML = `
+                        <i class="${data.icon || 'fas fa-link'}"></i>
+                        <h3>${data.name || '未命名站点'}</h3>
+                        <p>${data.description || ''}</p>
+                    `;
+                }
+            } catch (e) {
+                newSite.innerHTML = `
+                    <i class="${data.icon || 'fas fa-link'}"></i>
+                    <h3>${data.name || '未命名站点'}</h3>
+                    <p>${data.description || ''}</p>
+                `;
+            }
 
             // 添加到DOM
             sitesGrid.appendChild(newSite);
+
+            
 
             // 移除"暂无网站"提示（如果存在）
             const emptyMessage = sitesGrid.querySelector('.empty-sites');
@@ -504,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const title = card.querySelector('h3')?.textContent?.toLowerCase() || '';
                         const description = card.querySelector('p')?.textContent?.toLowerCase() || '';
                         const url = card.href || card.getAttribute('href') || '#';
-                        const icon = card.querySelector('i')?.className || '';
+                        const icon = card.querySelector('i.icon-fallback')?.className || card.querySelector('i')?.className || '';
 
                         // 将卡片信息添加到索引中
                         searchIndex.items.push({
