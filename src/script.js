@@ -392,6 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 搜索引擎相关元素
     const searchIcon = document.querySelector('.search-icon');
+    const searchEngineToggle = document.querySelector('.search-engine-toggle');
     const searchEngineDropdown = document.querySelector('.search-engine-dropdown');
     const searchEngineOptions = document.querySelectorAll('.search-engine-option');
 
@@ -990,10 +991,38 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSearchEngineUI();
 
         // 初始化搜索引擎下拉菜单事件
-        searchIcon.addEventListener('click', (e) => {
-            e.stopPropagation();
-            searchEngineDropdown.classList.toggle('active');
-        });
+        const toggleEngineDropdown = () => {
+            const next = !searchEngineDropdown.classList.contains('active');
+            searchEngineDropdown.classList.toggle('active', next);
+            if (searchBox) {
+                searchBox.classList.toggle('dropdown-open', next);
+            }
+            if (searchEngineToggle) {
+                searchEngineToggle.setAttribute('aria-expanded', String(next));
+            }
+        };
+
+        if (searchIcon) {
+            searchIcon.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleEngineDropdown();
+            });
+        }
+
+        if (searchEngineToggle) {
+            searchEngineToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleEngineDropdown();
+            });
+            // 键盘可访问性：Enter/Space 触发
+            searchEngineToggle.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleEngineDropdown();
+                }
+            });
+        }
 
         // 点击搜索引擎选项
         searchEngineOptions.forEach(option => {
@@ -1023,6 +1052,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // 关闭下拉菜单
                     searchEngineDropdown.classList.remove('active');
+                    if (searchBox) {
+                        searchBox.classList.remove('dropdown-open');
+                    }
                 }
             });
         });
@@ -1030,6 +1062,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // 点击页面其他位置关闭下拉菜单
         document.addEventListener('click', () => {
             searchEngineDropdown.classList.remove('active');
+            if (searchBox) {
+                searchBox.classList.remove('dropdown-open');
+            }
         });
     }
 

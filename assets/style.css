@@ -644,6 +644,7 @@ body .content.expanded {
     border-radius: 50%;
     opacity: 0;
     transition: all 0.3s ease;
+    pointer-events: none; /* 不阻挡点击，避免遮住图标可点击区域 */
 }
 
 .search-box.has-results::after {
@@ -697,15 +698,30 @@ body .content.expanded {
 
 /* 搜索图标和搜索引擎切换图标位置调整 */
 .search-box .search-icon {
-    right: 1.5rem;
+    right: 2.0rem;
     cursor: pointer;
     transition: all 0.3s ease;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
+/* 下拉指示图标交互与状态 */
+.search-box .search-engine-toggle:hover { color: inherit; }
+
+.search-box.dropdown-open .search-engine-toggle { transform: translateY(-50%) rotate(180deg); }
+
 .search-box .search-engine-toggle {
-    right: 3.5rem;
+    right: 0.8rem;
     cursor: pointer;
     font-size: 0.8rem;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* 搜索引擎下拉菜单 */
