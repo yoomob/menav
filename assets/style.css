@@ -637,7 +637,7 @@ body .content.expanded {
 .search-box::after {
     content: '';
     position: absolute;
-    right: 3.5rem;
+    right: 4rem;
     top: 50%;
     transform: translateY(-50%);
     width: 6px;
@@ -660,7 +660,7 @@ body .content.expanded {
 
 .search-box input {
     width: 100%;
-    padding: 1rem 4rem 1rem 1.5rem;
+    padding: 1rem 6rem 1rem 1.5rem; /* 扩大右侧内边距，给左移的点留空间 */
     border: none;
     border-radius: 12px;
     background-color: transparent;
