@@ -290,6 +290,7 @@ body.loaded .layout {
     display: flex;
     align-items: center;
     height: 60px; /* 确保与展开状态高度一致 */
+    margin-bottom: 0.8rem; /* 收起态同样拉开与按钮的间距 */
 }
 
 /* 折叠状态下的侧边栏内容区域调整 */
@@ -325,6 +326,7 @@ body.loaded .layout {
     overflow: hidden; /* 防止内容溢出 */
     position: relative; /* 添加相对定位，作为按钮的参考 */
     height: 60px; /* 固定高度，确保两种状态下一致 */
+    margin-bottom: 0.8rem; /* 与下方按钮区域拉开间距 */
 }
 
 .logo h1 {
@@ -356,10 +358,7 @@ body.loaded .layout {
     margin-left: 8px;
     padding: 0;
     flex-shrink: 0; /* 防止按钮被压缩 */
-    position: absolute; /* 绝对定位 */
-    right: 16px; /* 右侧对齐 */
-    top: 50%; /* 垂直居中 */
-    transform: translateY(-50%); /* 精确垂直居中 */
+    /* 在展开态使用flex对齐，保持与标题自然对齐 */
 }
 
 .sidebar-toggle .toggle-icon {
@@ -369,29 +368,27 @@ body.loaded .layout {
 
 .sidebar-toggle:hover {
     background: var(--secondary-bg);
-    transform: translateY(-2px) translateY(-50%);
 }
 
 .sidebar-toggle:active {
-    transform: translateY(0) translateY(-50%);
 }
 
 .sidebar.collapsed .sidebar-toggle {
-    position: absolute; /* 保持绝对定位 */
-    right: 50%; /* 在折叠状态下水平居中 */
+    position: absolute;
+    right: 16px; /* 与展开态保持一致的右侧间距 */
     top: 50%;
-    transform: translate(50%, -50%); /* 精确居中定位 */
-    margin: 0; /* 移除边距 */
-    height: 24px;
-    width: 24px;
+    transform: translateY(-50%);
+    margin: 0;
+    height: 28px; /* 与展开态一致 */
+    width: 28px;  /* 与展开态一致 */
 }
 
 .sidebar.collapsed .sidebar-toggle:hover {
-    transform: translate(50%, -52%);
+    transform: translateY(-50%);
 }
 
 .sidebar.collapsed .sidebar-toggle:active {
-    transform: translate(50%, -50%);
+    transform: translateY(-50%);
 }
 
 /* 侧边栏折叠状态下的按钮图标旋转180度 */
@@ -437,14 +434,14 @@ body.loaded .layout {
 .nav-section {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem; /* 从0.4rem减小到0.25rem */
+    gap: 0.4rem; /* 增大按钮间距 */
 }
 
 .section-title {
     font-size: 1rem;
     color: var(--accent-color);
     padding: 0.4rem 0.5rem; /* 减小上下padding */
-    margin-bottom: 0.2rem; /* 从0.4rem减小到0.2rem */
+    margin-bottom: 0.2rem; /* 增大与下方按钮组的间距 */
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -458,9 +455,10 @@ body.loaded .layout {
 /* 调整侧边栏折叠状态下的章节标题 */
 .sidebar.collapsed .section-title {
     justify-content: center;
-    padding: 0.6rem 0 0.3rem;
+    /* 统一与展开态的垂直间距 */
+    padding: 0.4rem 0; 
     text-align: center;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.2rem; /* 与展开态保持一致且更大 */
 }
 
 .sidebar.collapsed .section-title i {
@@ -477,12 +475,12 @@ body.loaded .layout {
 .sidebar.collapsed .nav-item {
     padding: 0;
     justify-content: center;
-    width: 40px; /* 设置固定宽度 */
-    height: 40px; /* 设置与宽度相等的高度 */
+    width: 44px; /* 增大按钮方块尺寸 */
+    height: 44px; /* 增大按钮方块尺寸 */
     text-align: center;
     margin-left: auto;
     margin-right: auto;
-    border-radius: 8px; /* 保持圆角 */
+    border-radius: 10px; /* 略增圆角 */
     display: flex;
     align-items: center;
     box-sizing: border-box;
@@ -517,16 +515,19 @@ body.loaded .layout {
 .nav-item {
     display: flex;
     align-items: center;
-    padding: 0.6rem 0.8rem; /* 从0.8rem减小到上下0.6rem,左右保持0.8rem */
+    height: 44px; /* 增大按钮高度 */
+    padding: 0 0.9rem; /* 略增左右内边距 */
     color: var(--nav-item-color);
     text-decoration: none;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    border-radius: 10px; /* 略增圆角，与增大高度协调 */
+    /* 限定可过渡属性，避免折叠/展开时Y向抖动 */
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
     position: relative;
 }
 
 .nav-item .icon-container {
     width: 24px;
+    height: 100%; /* 与按钮高度一致，垂直对齐更稳定 */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -584,7 +585,7 @@ body.loaded .layout {
     height: 100vh; /* 固定高度 */
     overflow-y: auto; /* 使用auto替代scroll，只在需要时显示滚动条 */
     overflow-x: hidden;
-    max-width: calc(100vw - var(--sidebar-width));
+    width: calc(100vw - var(--sidebar-width));
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -599,7 +600,7 @@ body.loaded .layout {
 /* 优化内容区域在侧边栏折叠状态下的边距 */
 body .content.expanded {
     margin-left: var(--sidebar-collapsed-width);
-    max-width: calc(100vw - var(--sidebar-collapsed-width));
+    width: calc(100vw - var(--sidebar-collapsed-width));
 }
 
 /* 仅在交互时启用布局相关过渡，避免首帧闪烁 */
@@ -608,7 +609,7 @@ body .content.expanded {
 }
 
 .with-anim .content {
-    transition: background-color 0.3s ease, margin-left 0.3s ease, max-width 0.3s ease;
+    transition: background-color 0.3s ease, margin-left 0.3s ease, width 0.3s ease;
 }
 
 /* 搜索框容器 - 固定在顶部 */
@@ -1221,6 +1222,7 @@ body .content.expanded {
     
     .content {
         margin-left: 0;
+        width: 100vw;
         max-width: 100vw;
         padding-top: 5rem;
     }
