@@ -948,6 +948,16 @@ body .content.expanded {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+.site-card .icon-placeholder,
+.site-card .icon-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.8rem;
+    height: 1.8rem;
+    flex-shrink: 0;
+}
+
 .site-card:hover i {
     transform: scale(1.1);
     color: var(--accent-hover);
