@@ -7,6 +7,7 @@
     --card-bg-gradient-2: #2b2c30;
     --site-card-bg-gradient-1: #363940;
     --site-card-bg-gradient-2: #31343a;
+    --site-card-hover-bg: linear-gradient(145deg, #3f434b, #353940);
     --text-color: #e4e6eb;
     --text-muted: #8b8c8f;
     --text-bright: #ffffff;
@@ -35,8 +36,9 @@ body.light-theme {
     --sidebar-bg: #f0f0eb;
     --card-bg-gradient-1: #f0f0eb;
     --card-bg-gradient-2: #e9e9e4;
-    --site-card-bg-gradient-1: #f0f0eb;
-    --site-card-bg-gradient-2: #e5e5e0;
+    --site-card-bg-gradient-1: #ffffff;
+    --site-card-bg-gradient-2: #f4f5f0;
+    --site-card-hover-bg: linear-gradient(145deg, #fafaf8, #eef0eb);
     --text-color: #333333;
     --text-muted: #666666;
     --text-bright: #000000;
@@ -924,8 +926,7 @@ body .content.expanded {
 
 .site-card:hover {
     transform: translateY(-4px);
-    background: linear-gradient(145deg, var(--secondary-bg), var(--site-card-bg-gradient-1));
-    box-shadow: 0 6px 20px var(--shadow-color);
+    background: var(--site-card-hover-bg);
     border-color: var(--border-color);
 }
 
