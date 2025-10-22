@@ -233,13 +233,23 @@ function loadModularConfig(dirPath) {
         if (siteConfig.fonts) config.fonts = siteConfig.fonts;
         if (siteConfig.profile) config.profile = siteConfig.profile;
         if (siteConfig.social) config.social = siteConfig.social;
+        
+        // 优先使用site.yml中的navigation配置
+        if (siteConfig.navigation) {
+            config.navigation = siteConfig.navigation;
+            console.log('使用 site.yml 中的导航配置');
+        }
     }
 
-    // 加载导航配置
-    const navConfigPath = path.join(dirPath, 'navigation.yml');
-    const navConfig = safeLoadYamlConfig(navConfigPath);
-    if (navConfig) {
-        config.navigation = navConfig;
+    // 如果site.yml中没有navigation配置，则回退到独立的navigation.yml
+    if (!config.navigation || config.navigation.length === 0) {
+        const navConfigPath = path.join(dirPath, 'navigation.yml');
+        const navConfig = safeLoadYamlConfig(navConfigPath);
+        if (navConfig) {
+            config.navigation = navConfig;
+            console.log('site.yml 中未找到导航配置，使用独立的 navigation.yml 文件');
+            console.log('提示：建议将导航配置迁移到 site.yml 中，以便统一管理');
+        }
     }
 
     // 加载页面配置
