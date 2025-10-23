@@ -69,3 +69,6 @@ navigation:
   - name: 书签
     icon: fas fa-bookmark
     id: bookmarks
+  - name: 书签(多层级)
+    icon: fas fa-bookmark
+    id: bookmarks-four-level

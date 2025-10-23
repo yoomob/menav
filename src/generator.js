@@ -196,7 +196,21 @@ function safeLoadYamlConfig(filePath) {
 
   try {
     const fileContent = fs.readFileSync(filePath, 'utf8');
-    return yaml.load(fileContent);
+    // 使用 loadAll 而不是 load 来支持多文档 YAML 文件
+    const docs = yaml.loadAll(fileContent);
+    
+    // 如果只有一个文档，直接返回
+    if (docs.length === 1) {
+      return docs[0];
+    }
+    
+    // 如果有多个文档，返回第一个文档（忽略后面的文档）
+    if (docs.length > 1) {
+      console.warn(`Warning: Multiple documents found in ${filePath}. Using the first document only.`);
+      return docs[0];
+    }
+    
+    return null;
   } catch (error) {
     handleConfigLoadError(filePath, error);
     return null;
