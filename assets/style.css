@@ -950,12 +950,71 @@ body .content.expanded {
 
 .site-card .icon-placeholder,
 .site-card .icon-fallback {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-block;
     width: 1.8rem;
     height: 1.8rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
     flex-shrink: 0;
+    vertical-align: middle;
+    text-align: center;
+    line-height: 1.8rem;
+    font-size: 1.8rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* 确保图标容器在加载过程中保持固定尺寸 */
+.site-card .icon-container {
+    display: inline-block;
+    width: 1.8rem;
+    height: 1.8rem;
+    margin-bottom: 1rem;
+    position: relative;
+    vertical-align: middle;
+}
+
+.site-card .icon-container .favicon-icon,
+.site-card .icon-container .icon-placeholder,
+.site-card .icon-container .icon-fallback {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    margin-bottom: 0;
+}
+
+/* 优化图标切换动画 */
+.site-card .icon-container .favicon-icon {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.site-card .icon-container .favicon-icon.loaded {
+    opacity: 1;
+}
+
+.site-card .icon-container .favicon-icon.error {
+    display: none;
+}
+
+.site-card .icon-container .icon-placeholder {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.site-card .icon-container .icon-placeholder.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.site-card .icon-container .icon-fallback {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.site-card .icon-container .icon-fallback.visible {
+    opacity: 1;
 }
 
 .site-card:hover i {
