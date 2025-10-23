@@ -10,7 +10,6 @@
     "clean": "node ./scripts/clean.js",
     "build": "npm run clean && npm run generate",
     "restructure": "node restructure.js",
-    "migrate-config": "node src/migrate-config.js",
     "import-bookmarks": "node src/bookmark-processor.js"
   },
   "keywords": [
