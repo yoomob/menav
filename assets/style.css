@@ -990,7 +990,7 @@ body .content.expanded {
 
 /* 展开/折叠动画 */
 .category-content, .group-content {
-    overflow: hidden;
+    overflow: visible;
     transition: max-height 0.3s ease, opacity 0.3s ease;
     max-height: 9999px;
     opacity: 1;
@@ -998,6 +998,7 @@ body .content.expanded {
 
 .category.collapsed .category-content,
 .group.collapsed .group-content {
+    overflow: hidden;
     max-height: 0;
     opacity: 0;
 }
