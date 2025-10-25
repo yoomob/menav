@@ -10,16 +10,9 @@
         <h{{#if level}}{{add level 1}}{{else}}2{{/if}} data-editable="category-name">
             <i class="{{icon}}"></i>
             {{name}}
-            {{#if subcategories}}
-                <span class="toggle-icon">
-                    <i class="fas fa-chevron-down"></i>
-                </span>
-            {{/if}}
-            {{#if groups}}
-                <span class="toggle-icon">
-                    <i class="fas fa-chevron-down"></i>
-                </span>
-            {{/if}}
+            <span class="toggle-icon">
+                <i class="fas fa-chevron-down"></i>
+            </span>
         </h{{#if level}}{{add level 1}}{{else}}2{{/if}}>
     </div>
     
