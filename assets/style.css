@@ -876,9 +876,27 @@ body .content.expanded {
     transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* 分类标题容器 - 添加交互效果 */
+.category-header {
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin: -0.5rem -0.5rem 1.5rem -0.5rem;
+    transition: all 0.3s ease;
+}
+
+.category-header:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+}
+
+.category-header:active {
+    transform: translateY(0);
+}
+
 .category h2 {
     font-size: 1.2rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0;
     color: var(--text-bright);
     display: flex;
     align-items: center;
@@ -890,6 +908,12 @@ body .content.expanded {
 .category h2 i {
     color: var(--accent-color);
     font-size: 1.3rem;
+    transition: all 0.3s ease;
+}
+
+.category-header:hover h2 i {
+    transform: scale(1.1);
+    color: var(--accent-hover);
 }
 
 /* 多层级嵌套样式 */
@@ -905,9 +929,27 @@ body .content.expanded {
     width: calc(100% - 3.5rem);
 }
 
+/* 层级2: 子分类标题交互 */
+.category-level-2 .category-header {
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin: -0.5rem -0.5rem 1rem -0.5rem;
+    transition: all 0.3s ease;
+}
+
+.category-level-2 .category-header:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+}
+
+.category-level-2 .category-header:active {
+    transform: translateY(0);
+}
+
 .category-level-2 .category-header h3 {
     font-size: 1.1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0;
     color: var(--text-bright);
     display: flex;
     align-items: center;
@@ -918,22 +960,49 @@ body .content.expanded {
 .category-level-2 .category-header h3 i {
     color: var(--accent-color);
     font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.category-level-2 .category-header:hover h3 i {
+    transform: scale(1.1);
+    color: var(--accent-hover);
 }
 
 /* 层级3: 分组 */
 .group-level-3, .category-level-3 {
-    margin: 1rem 0 1rem 1.5rem;
-    padding: 1rem;
+    margin: 0.6rem 0 0.6rem 1rem;
+    padding: 0.7rem;
     background: rgba(var(--card-bg-rgb), 0.4);
     border-left: 2px solid var(--secondary-color);
     border-radius: 8px;
-    width: calc(100% - 2.5rem);
+    width: calc(100% - 1.7rem);
+}
+
+/* 层级3: 分组/分类标题交互 */
+.group-level-3 .group-header,
+.category-level-3 .category-header {
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 0.4rem;
+    margin: -0.4rem -0.4rem 0.5rem -0.4rem;
+    transition: all 0.3s ease;
+}
+
+.group-level-3 .group-header:hover,
+.category-level-3 .category-header:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+}
+
+.group-level-3 .group-header:active,
+.category-level-3 .category-header:active {
+    transform: translateY(0);
 }
 
 .group-level-3 .group-header h4,
 .category-level-3 .category-header h4 {
     font-size: 1rem;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0;
     color: var(--text-bright);
     display: flex;
     align-items: center;
@@ -945,6 +1014,12 @@ body .content.expanded {
 .category-level-3 .category-header h4 i {
     color: var(--secondary-color);
     font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.group-level-3 .group-header:hover h4 i,
+.category-level-3 .category-header:hover h4 i {
+    transform: scale(1.1);
 }
 
 /* 层级4: 更深层次的分组 */
@@ -957,10 +1032,31 @@ body .content.expanded {
     width: calc(100% - 1.8rem);
 }
 
+/* 层级4: 分组/分类标题交互 */
+.group-level-4 .group-header,
+.category-level-4 .category-header {
+    cursor: pointer;
+    border-radius: 6px;
+    padding: 0.4rem;
+    margin: -0.4rem -0.4rem 0.6rem -0.4rem;
+    transition: all 0.3s ease;
+}
+
+.group-level-4 .group-header:hover,
+.category-level-4 .category-header:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+}
+
+.group-level-4 .group-header:active,
+.category-level-4 .category-header:active {
+    transform: translateY(0);
+}
+
 .group-level-4 .group-header h5,
 .category-level-4 .category-header h5 {
     font-size: 0.95rem;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0;
     color: var(--text-bright);
     display: flex;
     align-items: center;
@@ -972,6 +1068,12 @@ body .content.expanded {
 .category-level-4 .category-header h5 i {
     color: var(--tertiary-color);
     font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.group-level-4 .group-header:hover h5 i,
+.category-level-4 .category-header:hover h5 i {
+    transform: scale(1.1);
 }
 
 /* 切换图标样式 */
@@ -991,8 +1093,9 @@ body .content.expanded {
 /* 展开/折叠动画 */
 .category-content, .group-content {
     overflow: visible;
-    transition: max-height 0.3s ease, opacity 0.3s ease;
-    max-height: 9999px;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 5000px;
     opacity: 1;
 }
 
@@ -1001,6 +1104,26 @@ body .content.expanded {
     overflow: hidden;
     max-height: 0;
     opacity: 0;
+    margin-top: 0;
+}
+
+/* 收起状态下调整header的下边距 */
+.category.collapsed > .category-header {
+    margin-bottom: -0.5rem;
+}
+
+.category-level-2.collapsed > .category-header {
+    margin-bottom: -0.5rem;
+}
+
+.group-level-3.collapsed > .group-header,
+.category-level-3.collapsed > .category-header {
+    margin-bottom: -0.5rem;
+}
+
+.group-level-4.collapsed > .group-header,
+.category-level-4.collapsed > .category-header {
+    margin-bottom: -0.4rem;
 }
 
 .category.collapsed .toggle-icon i,
