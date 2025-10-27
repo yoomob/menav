@@ -329,6 +329,7 @@ body.loaded .layout {
     position: relative; /* 添加相对定位，作为按钮的参考 */
     height: 60px; /* 固定高度，确保两种状态下一致 */
     margin-bottom: 0.8rem; /* 与下方按钮区域拉开间距 */
+    transition: padding 0.3s ease; /* 添加padding过渡，避免突变 */
 }
 
 .logo h1 {
@@ -356,16 +357,23 @@ body.loaded .layout {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    margin-left: 8px;
+    transition: background 0.3s ease; /* 只过渡背景色，移除all避免位置过渡 */
     padding: 0;
     flex-shrink: 0; /* 防止按钮被压缩 */
-    /* 在展开态使用flex对齐，保持与标题自然对齐 */
+    position: absolute; /* 在两种状态下都使用绝对定位 */
+    right: 1.2rem; /* 展开状态下固定在右侧 */
+    top: 60%;
+    transform: translateY(-50%); /* 垂直居中 */
 }
 
 .sidebar-toggle .toggle-icon {
     font-size: 0.9rem;
     transition: transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
 }
 
 .sidebar-toggle:hover {
@@ -373,24 +381,22 @@ body.loaded .layout {
 }
 
 .sidebar-toggle:active {
+    background: var(--secondary-bg);
 }
 
+/* 收起状态下按钮居中 */
 .sidebar.collapsed .sidebar-toggle {
-    position: absolute;
-    right: 16px; /* 与展开态保持一致的右侧间距 */
-    top: 50%;
-    transform: translateY(-50%);
-    margin: 0;
-    height: 28px; /* 与展开态一致 */
-    width: 28px;  /* 与展开态一致 */
+    left: 50%; /* 水平居中 */
+    right: auto; /* 移除右侧定位 */
+    transform: translate(-50%, -50%); /* 同时水平和垂直居中 */
 }
 
 .sidebar.collapsed .sidebar-toggle:hover {
-    transform: translateY(-50%);
+    background: var(--secondary-bg);
 }
 
 .sidebar.collapsed .sidebar-toggle:active {
-    transform: translateY(-50%);
+    background: var(--secondary-bg);
 }
 
 /* 侧边栏折叠状态下的按钮图标旋转180度 */
@@ -430,6 +436,7 @@ body.loaded .layout {
     transform: translateX(-20px);
     width: 0;
     visibility: hidden; /* 确保完全隐藏，防止干扰布局 */
+    pointer-events: none; /* 禁用交互，避免影响布局 */
 }
 
 /* 导航区域样式 */
