@@ -344,18 +344,59 @@ window.MeNav = {
 
 // 多层级嵌套书签功能
 window.MeNav.expandAll = function() {
-    document.querySelectorAll('.category.collapsed, .group.collapsed').forEach(element => {
-        element.classList.remove('collapsed');
-        saveToggleState(element, 'expanded');
-    });
+    const activePage = document.querySelector('.page.active');
+    if (activePage) {
+        activePage.querySelectorAll('.category.collapsed, .group.collapsed').forEach(element => {
+            element.classList.remove('collapsed');
+            saveToggleState(element, 'expanded');
+        });
+    }
 };
 
 window.MeNav.collapseAll = function() {
-    document.querySelectorAll('.category:not(.collapsed), .group:not(.collapsed)').forEach(element => {
-        element.classList.add('collapsed');
-        saveToggleState(element, 'collapsed');
-    });
+    const activePage = document.querySelector('.page.active');
+    if (activePage) {
+        activePage.querySelectorAll('.category:not(.collapsed), .group:not(.collapsed)').forEach(element => {
+            element.classList.add('collapsed');
+            saveToggleState(element, 'collapsed');
+        });
+    }
 };
+
+// 智能切换分类展开/收起状态
+window.MeNav.toggleCategories = function() {
+    const activePage = document.querySelector('.page.active');
+    if (!activePage) return;
+    
+    const allElements = activePage.querySelectorAll('.category, .group');
+    const collapsedElements = activePage.querySelectorAll('.category.collapsed, .group.collapsed');
+    
+    // 如果收起的数量 >= 总数的一半，执行展开；否则执行收起
+    if (collapsedElements.length >= allElements.length / 2) {
+        window.MeNav.expandAll();
+        updateCategoryToggleIcon('up');
+    } else {
+        window.MeNav.collapseAll();
+        updateCategoryToggleIcon('down');
+    }
+};
+
+// 更新分类切换按钮图标
+function updateCategoryToggleIcon(state) {
+    const toggleBtn = document.getElementById('category-toggle');
+    if (!toggleBtn) return;
+    
+    const icon = toggleBtn.querySelector('i');
+    if (!icon) return;
+    
+    if (state === 'up') {
+        icon.className = 'fas fa-angle-double-up';
+        toggleBtn.setAttribute('aria-label', '收起分类');
+    } else {
+        icon.className = 'fas fa-angle-double-down';
+        toggleBtn.setAttribute('aria-label', '展开分类');
+    }
+}
 
 window.MeNav.toggleCategory = function(categoryName, subcategoryName = null, groupName = null) {
     const selector = groupName
@@ -1445,6 +1486,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 初始化嵌套分类功能
         initializeNestedCategories();
+        
+        // 初始化分类切换按钮
+        const categoryToggleBtn = document.getElementById('category-toggle');
+        if (categoryToggleBtn) {
+            categoryToggleBtn.addEventListener('click', function() {
+                window.MeNav.toggleCategories();
+            });
+        } else {
+            console.error('Category toggle button not found');
+        }
         
         // 初始化搜索索引（使用requestIdleCallback或setTimeout延迟初始化，避免影响页面加载）
         if ('requestIdleCallback' in window) {
