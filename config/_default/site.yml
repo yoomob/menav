@@ -2,11 +2,11 @@
 # 建议复制到 config/user/site.yml 并按需调整；用户配置采用“完全替换”策略，将覆盖默认配置。
 
 # 网站基本信息
-title: 我的导航
-description: 个人网络导航站
-author: Your Name
+title: MeNav
+description: Personal Navigation Station
+author: rbetree
 favicon: menav.svg
-logo_text: 导航站
+logo_text: MeNav
 
 icons:
   # 站点卡片图标模式：
@@ -34,7 +34,7 @@ fonts:
 profile:
   title: Hello,
   subtitle: Welcome to My Navigation
-  description: 导航菜单
+  description: MeNav
 
 # 社交媒体链接：显示在侧边栏底部；可按需增删
 social:
