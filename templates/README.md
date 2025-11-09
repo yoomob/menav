@@ -407,7 +407,7 @@ categories:
 ### 添加新页面
 
 1. 在 `templates/pages/` 创建新的 `.hbs` 文件
-2. 在 `config/_default/navigation.yml` 添加页面配置
+2. 在 `config/_default/site.yml` 的 `navigation` 部分添加页面配置
 3. 页面内容可引用现有组件或创建新组件
 
 示例：
