@@ -337,7 +337,7 @@ function ensureConfigDefaults(config) {
   result.site.description = result.site.description || '个人网络导航站';
   result.site.author = result.site.author || 'MeNav User';
   result.site.logo_text = result.site.logo_text || '导航站';
-  result.site.favicon = result.site.favicon || 'favicon.ico';
+  result.site.favicon = result.site.favicon || 'menav.svg';
   result.site.logo = result.site.logo || null;
   result.site.footer = result.site.footer || '';
   result.site.theme = result.site.theme || {
