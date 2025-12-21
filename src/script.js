@@ -398,13 +398,13 @@ function updateCategoryToggleIcon(state) {
     }
 }
 
-window.MeNav.toggleCategory = function(categoryName, subcategoryName = null, groupName = null) {
-    const selector = groupName
-        ? `[data-name="${categoryName}"] [data-name="${subcategoryName}"] [data-name="${groupName}"]`
-        : subcategoryName
-            ? `[data-name="${categoryName}"] [data-name="${subcategoryName}"]`
-            : `[data-name="${categoryName}"]`;
-            
+window.MeNav.toggleCategory = function(categoryName, subcategoryName = null, groupName = null, subgroupName = null) {
+    let selector = `[data-name="${categoryName}"]`;
+
+    if (subcategoryName) selector += ` [data-name="${subcategoryName}"]`;
+    if (groupName) selector += ` [data-name="${groupName}"]`;
+    if (subgroupName) selector += ` [data-name="${subgroupName}"]`;
+
     const element = document.querySelector(selector);
     if (element) {
         toggleNestedElement(element);
@@ -499,6 +499,11 @@ function extractNestedData(element) {
     const groups = element.querySelectorAll(':scope > .category-content > .groups-container > .group');
     if (groups.length > 0) {
         data.groups = Array.from(groups).map(group => extractNestedData(group));
+    }
+
+    const subgroups = element.querySelectorAll(':scope > .group-content > .subgroups-container > .group');
+    if (subgroups.length > 0) {
+        data.subgroups = Array.from(subgroups).map(subgroup => extractNestedData(subgroup));
     }
     
     const sites = element.querySelectorAll(':scope > .category-content > .sites-grid > .site-card, :scope > .group-content > .sites-grid > .site-card');

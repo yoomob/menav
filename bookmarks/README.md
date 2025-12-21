@@ -29,12 +29,12 @@
 
 ## 配置加载优先级（完全替换）
 
-书签页配置遵循项目的“完全替换”策略：系统只会使用找到的最高优先级配置，不会把默认配置与用户配置合并。
+书签页配置同样遵循项目的“完全替换”策略：系统只会选择一套配置目录加载，不会把 `user` 与 `_default` 混合合并。
 
-优先级（高 → 低）：
+- 若存在 `config/user/`：书签页配置应位于 `config/user/pages/bookmarks.yml`（通常由导入脚本生成）
+- 否则：使用 `config/_default/pages/bookmarks.yml`（默认示例）
 
-1. `config/user/pages/bookmarks.yml`（用户配置，通常由导入脚本生成）
-2. `config/_default/pages/bookmarks.yml`（默认配置）
+> 提示：一旦创建 `config/user/`，`config/_default/` 会被完全忽略，因此不要指望从默认配置“兜底补齐缺失项”。
 
 ## MarksVault 扩展集成
 
@@ -54,6 +54,7 @@
    ```bash
    npm run import-bookmarks
    ```
+   - 若 `config/user/` 不存在，导入脚本会先从 `config/_default/` 初始化一份用户配置（因为配置采用“完全替换”策略，需要完整配置才能正常生成站点）。
    （可选）若希望生成结果保持确定性（便于版本管理，减少时间戳导致的无意义 diff）：
    ```bash
    MENAV_BOOKMARKS_DETERMINISTIC=1 npm run import-bookmarks

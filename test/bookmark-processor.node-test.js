@@ -55,6 +55,62 @@ test('parseBookmarks：解析书签栏、根目录书签与图标映射', () => 
   assert.equal(tools.sites[0].name, 'Google');
 });
 
+test('templates：subgroups（第4层）应可渲染到页面', () => {
+  const Handlebars = require('handlebars');
+  const { registerAllHelpers } = require('../src/helpers');
+
+  const hbs = Handlebars.create();
+  registerAllHelpers(hbs);
+
+  const category = fs.readFileSync(path.join(__dirname, '..', 'templates', 'components', 'category.hbs'), 'utf8');
+  const group = fs.readFileSync(path.join(__dirname, '..', 'templates', 'components', 'group.hbs'), 'utf8');
+  const siteCard = fs.readFileSync(path.join(__dirname, '..', 'templates', 'components', 'site-card.hbs'), 'utf8');
+  const page = fs.readFileSync(path.join(__dirname, '..', 'templates', 'pages', 'bookmarks.hbs'), 'utf8');
+
+  hbs.registerPartial('category', category);
+  hbs.registerPartial('group', group);
+  hbs.registerPartial('site-card', siteCard);
+
+  const tpl = hbs.compile(page);
+
+  const html = tpl({
+    title: '我的书签',
+    subtitle: '测试 subgroups 渲染',
+    icons: { mode: 'manual' },
+    categories: [
+      {
+        name: '技术',
+        icon: 'fas fa-code',
+        subcategories: [
+          {
+            name: '前端',
+            icon: 'fas fa-laptop-code',
+            groups: [
+              {
+                name: '框架',
+                icon: 'fas fa-cubes',
+                subgroups: [
+                  {
+                    name: 'React生态',
+                    icon: 'fab fa-react',
+                    sites: [
+                      { name: 'React', url: 'https://reactjs.org/', icon: 'fab fa-react', description: 'React官方' },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+
+  assert.ok(html.includes('subgroups-container'), '应输出 subgroups-container 容器');
+  assert.ok(html.includes('group-level-4'), '应输出 level=4 的 group 样式类');
+  assert.ok(html.includes('React生态'), '应渲染子分组标题文本');
+});
+
 test('generateBookmarksYaml：生成 YAML 且可被解析', () => {
   const bookmarks = {
     categories: [
@@ -122,4 +178,3 @@ test('ensureUserConfigInitialized/ensureUserSiteYmlExists：可在空目录初�
     process.chdir(originalCwd);
   }
 });
-
