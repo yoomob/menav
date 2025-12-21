@@ -519,6 +519,19 @@ function loadConfig() {
 
   // 根据优先级顺序选择最高优先级的配置
   if (hasUserModularConfig) {
+    // 配置采用“完全替换”策略：一旦存在 config/user/，将不会回退到 config/_default/
+    if (!fs.existsSync('config/user/site.yml')) {
+      console.error('[ERROR] 检测到 config/user/ 目录，但缺少 config/user/site.yml。');
+      console.error('[ERROR] 由于配置采用“完全替换”策略，系统不会从 config/_default/ 补齐缺失配置。');
+      console.error('[ERROR] 解决方法：先完整复制 config/_default/ 到 config/user/，再按需修改。');
+      process.exit(1);
+    }
+
+    if (!fs.existsSync('config/user/pages')) {
+      console.warn('[WARN] 检测到 config/user/ 目录，但缺少 config/user/pages/。部分页面内容可能为空。');
+      console.warn('[WARN] 建议：复制 config/_default/pages/ 到 config/user/pages/，再按需修改。');
+    }
+
     // 1. 最高优先级: config/user/ 目录
     config = loadModularConfig('config/user');
   } else if (hasDefaultModularConfig) {

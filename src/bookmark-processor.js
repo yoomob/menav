@@ -714,11 +714,15 @@ function generateBookmarksYaml(bookmarks) {
       quotingType: '"'
     });
     
-    // 添加注释
-    const yamlWithComment = 
+    // 添加注释（可选确定性输出，方便版本管理）
+    const deterministic = process.env.MENAV_BOOKMARKS_DETERMINISTIC === '1';
+    const timestampLine = deterministic
+      ? ''
+      : `# 由bookmark-processor.js生成于 ${new Date().toISOString()}\n`;
+
+    const yamlWithComment =
 `# 自动生成的书签配置文件
-# 由bookmark-processor.js生成于 ${new Date().toISOString()}
-# 若要更新，请将新的书签HTML文件放入bookmarks/目录
+${timestampLine}# 若要更新，请将新的书签HTML文件放入bookmarks/目录
 # 此文件使用模块化配置格式，位于config/user/pages/目录下
 
 ${yamlString}`;
@@ -914,4 +918,13 @@ if (require.main === module) {
     console.error('Unhandled error in bookmark processing:', err);
     process.exit(1);
   });
-} 
+}
+
+module.exports = {
+  ensureUserConfigInitialized,
+  ensureUserSiteYmlExists,
+  upsertBookmarksNavInSiteYml,
+  parseBookmarks,
+  generateBookmarksYaml,
+  updateNavigationWithBookmarks,
+};

@@ -265,6 +265,10 @@ npm install
    ```bash
    npm run import-bookmarks
    ```
+   - 若希望生成结果保持确定性（便于版本管理，减少时间戳导致的无意义 diff）：
+   ```bash
+   MENAV_BOOKMARKS_DETERMINISTIC=1 npm run import-bookmarks
+   ```
    - 系统会自动将书签转换为配置文件保存到`config/user/pages/bookmarks.yml`
    - **注意**：`npm run dev`命令不会自动处理书签文件，必须先手动运行上述命令
 
@@ -280,6 +284,19 @@ npm run build
 ```
 
 构建后的文件位于`dist`目录
+
+6. 提交前检查（推荐）
+
+```bash
+# 一键检查（语法检查 + 单元测试 + 构建）
+npm run check
+```
+
+（可选）格式化代码：
+
+```bash
+npm run format
+```
 
 </details>
 
@@ -413,7 +430,8 @@ MeNav使用模块化配置方式，将配置分散到多个文件中，更易于
 * **创建配置目录**:
    - 在`config/user/`目录下创建您的自定义配置文件
    - 可以参考项目结构中的`config/_default/`目录结构
-   - 至少需要创建`site.yml`
+   - 至少需要创建`site.yml`（缺失时构建会直接报错退出，避免生成空白站点）
+   - 首次使用建议先完整复制 `config/_default/` 到 `config/user/`，再按需修改（因为配置采用“完全替换”策略，不会从默认配置补齐缺失项）
 
 ### 配置详解
 
@@ -744,6 +762,8 @@ MeNav支持从浏览器导入书签，快速批量添加网站链接，无需手
 - 只有存在根路径书签时才会创建该分类
 
 </details>
+
+> 💡 *版本管理建议*：若你希望每次导入书签生成的 `bookmarks.yml` 内容保持确定性（避免因时间戳导致的无意义 diff），可在运行导入时设置环境变量：`MENAV_BOOKMARKS_DETERMINISTIC=1`。
 
 > 生成的配置可在`config/user/pages/bookmarks.yml`中查看和编辑
 
