@@ -17,7 +17,7 @@
     "personal"
   ],
   "author": "Your Name",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "dependencies": {
     "js-yaml": "^4.1.0",
     "handlebars": "^4.7.8",
