@@ -299,7 +299,9 @@ categories:
 {{/if}}
 ```
 
-提示：关于 `icons.mode` 与隐私说明，请参见 README 的“网站图标模式（icons.mode）”章节与“近期更新”。
+提示：关于 `icons.mode` 的配置与隐私说明，请参见：
+- `config/README.md` 的 `site.yml 常用字段`：[`../config/README.md#siteyml-常用字段`](../config/README.md#siteyml-%E5%B8%B8%E7%94%A8%E5%AD%97%E6%AE%B5)
+- 根目录 `README.md` 的“近期更新”：[`../README.md#近期更新`](../README.md#%E8%BF%91%E6%9C%9F%E6%9B%B4%E6%96%B0)
 
 ## 模板数据流
 

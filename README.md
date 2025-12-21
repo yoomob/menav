@@ -41,14 +41,13 @@
 - [近期更新](#近期更新)
 - [技术栈](#技术栈)
 - [项目结构](#项目结构)
+- [文档导航](#文档导航)
 - [快速开始](#快速开始)
 - [部署方式](#部署方式)
   - [部署到GitHub Pages](#快速部署到github-pages)
   - [部署到自己的服务器](#部署到服务器)
   - [其他CI/CD服务部署](#其他cicd托管选项)
 - [配置指南](#设置配置文件)
-  - [使用配置](#使用配置)
-  - [配置详解](#配置详解)
 - [书签导入](#书签导入功能)
 - [常见问题](#常见问题)
 - [Star-History](#Star-History)
@@ -238,6 +237,15 @@ menav/
 │       └── pages/    # 用户页面配置
 ```
 
+## 文档导航
+
+- 配置系统（完全替换策略、目录结构、示例）：[`config/README.md`](config/README.md)
+- 书签导入（格式要求、流程、常见问题）：[`bookmarks/README.md`](bookmarks/README.md)
+- 模板系统（组件、回退、数据流）：[`templates/README.md`](templates/README.md)
+- 源码结构（各脚本职责）：[`src/README.md`](src/README.md)
+- Handlebars helpers（模板辅助函数）：[`src/helpers/README.md`](src/helpers/README.md)
+- 静态资源（样式/图片等）：[`assets/README.md`](assets/README.md)
+
 ## 快速开始
 
 <details>
@@ -257,7 +265,7 @@ cd menav
 npm install
 ```
 
-3. 完成配置（见[设置配置文件](##设置配置文件)）
+3. 完成配置（见[设置配置文件](#设置配置文件)）
    
 4. 导入书签（可选）
    - 将浏览器导出的HTML格式书签文件放入`bookmarks`目录
@@ -326,7 +334,7 @@ npm run format
 
 创建个人配置文件:
 - **重要:** 始终创建自己的用户配置文件，不要直接修改默认配置文件
-- 完成配置文件（见[设置配置文件](##设置配置文件)）
+- 完成配置文件（见[设置配置文件](#设置配置文件)）
 - 提交您的配置文件到仓库
 
 #### 第三步：等待自动部署
@@ -415,7 +423,9 @@ server {
 
 ## 设置配置文件
 
-MeNav使用模块化配置方式，将配置分散到多个文件中，更易于管理和维护。
+MeNav 使用模块化配置方式，将配置分散到多个 YAML 文件中，更易于管理和维护。
+
+完整说明请直接看：[`config/README.md`](config/README.md)（以该文档为准）。
 
 > **🔔 重要提示：** 请务必在`config/user/`目录下创建并使用您自己的配置文件，不要直接修改默认配置文件，以便后续更新项目时不会丢失您的个性化设置。
 
@@ -425,363 +435,22 @@ MeNav使用模块化配置方式，将配置分散到多个文件中，更易于
 
 **注意：** 采用完全替换策略，而非合并。系统会选择存在的用户配置，完全忽略默认配置。
 
-### 使用配置
+### 最小可用配置（快速指引）
 
-* **创建配置目录**:
-   - 在`config/user/`目录下创建您的自定义配置文件
-   - 可以参考项目结构中的`config/_default/`目录结构
-   - 至少需要创建`site.yml`（缺失时构建会直接报错退出，避免生成空白站点）
-   - 首次使用建议先完整复制 `config/_default/` 到 `config/user/`，再按需修改（因为配置采用“完全替换”策略，不会从默认配置补齐缺失项）
-
-### 配置详解
-
-<details>
-<summary>点击展开</summary>
-
-MeNav的配置系统分为两个主要部分，对应两种不同类型的配置文件：
-
-1. `site.yml` - 网站基本信息、字体、个人资料、社交媒体链接和导航菜单配置
-2. `pages/` 目录 - 各页面的内容配置
-
-以下详细介绍每个配置文件的结构和用途。
-
-### 一、site.yml 配置文件
-
-site.yml文件包含网站的基本信息、字体设置、个人资料、社交媒体链接和导航菜单等全局配置，这些设置会影响整个网站的呈现。
-
-```yaml
-# 网站基本信息
-title: "我的导航站"         # 网站标题，显示在浏览器标签和页面顶部
-description: "个人网址导航"  # 网站描述，用于SEO和分享卡片
-author: "张三"             # 作者姓名
-favicon: "menav.svg"        # 网站图标，支持ico、png等格式
-logo_text: "导航站"         # 左上角显示的Logo文本
-
-icons:
-  mode: favicon   # 可选: favicon | manual（默认 favicon）
-
-# 字体设置
-fonts:
-  title:  # 标题字体设置
-    family: "Roboto"  # 字体名称
-    weight: 700       # 字重值：400常规、500中等、700粗体
-    source: "google"  # 字体来源：google或system
-  subtitle:  # 副标题字体
-    family: "Noto Sans SC"
-    weight: 500
-    source: "google"
-  body:  # 正文字体
-    family: "Noto Sans SC"
-    weight: 400
-    source: "google"
-    
-# 个人资料配置
-profile:
-  title: "欢迎来到我的导航站"       # 主标题/欢迎语
-  subtitle: "收集实用网站和工具"    # 副标题
-  description: "这里整理了我日常使用的网站和工具，方便快速访问。" # 详细描述
-
-# 社交媒体链接
-social:
-  - name: "GitHub"
-    url: "https://github.com/your-username"
-    icon: "fab fa-github"
-  - name: "Twitter"
-    url: "https://twitter.com/your-username"
-    icon: "fab fa-twitter"
-  # 更多社交媒体...
-```
-
-#### 网站图标模式（icons.mode）
-
-支持两种站点卡片图标模式，默认使用 favicon API：
-
-- mode=favicon：使用 Google Favicon API 加载站点图标；加载失败时回退为 Font Awesome 的 `fas fa-link`；图标图片使用 `loading="lazy"` 延迟加载以提升首页性能。
-- mode=manual：沿用手动指定的 Font Awesome 图标，不发起任何 favicon 请求。
-
-所用 Favicon API：
-`https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url={{url}}&size=32`
-
-隐私说明：
-- 启用 `mode=favicon` 时，页面会请求第三方服务以获取图片，可能将站点 `URL` 发送至该服务商（Google）。
-
-
-```yaml
-# 导航配置
-navigation:
-  - name: "首页"               # 菜单项名称
-    icon: "fas fa-home"        # 菜单项图标
-    id: "home"                 # 页面标识符（必须唯一）
-    active: true               # 是否默认激活（只能有一个为true）
-  - name: "项目"
-    icon: "fas fa-project-diagram"
-    id: "projects"
-  - name: "文章"
-    icon: "fas fa-book"
-    id: "articles"
-  # 更多导航项...
-```
-
-> **📝 温馨提示**：
-> - 关于**字体设置**：
->   - **system**表示使用系统自带字体，无需额外加载，页面加载速度更快
->   - **google**表示从Google Fonts加载字体，选择更丰富，但可能影响加载速度
->   - 中文网站推荐使用"Noto Sans SC"、"Source Han Sans CN"等支持中文的字体
->   - 设置字重时请确保所选字体支持该字重值，否则可能无法正确显示
-> - 关于**个人资料**：profile.description支持较长文本，可以添加一些个性化的介绍或使用说明，让您的导航站更具特色
-> - 关于**社交媒体链接**：这些链接会显示在网站侧边栏的底部
-> - 关于**导航配置**：
->   - 每个导航项的`id`必须唯一，并且有对应的页面配置文件（该id必须与`pages/`文件夹中的页面配置文件名一致）
->   - 只能设置一个导航项的`active`为`true`，作为默认显示页面
->   - 图标使用Font Awesome 5图标库，格式为`前缀 fa-图标名`
->   - 导航菜单的顺序与此配置中的顺序一致，可以通过调整项目顺序来更改导航顺序
-
-### 二、pages目录 配置文件
-
-pages目录包含每个页面的详细配置，每个文件对应一个页面。文件名必须与 `site.yml` 中 `navigation` 配置的 `id` 一致。
-
-例如，对于导航中的"home"页面，需要创建`config/user/pages/home.yml`：
-
-```yaml
-# pages/home.yml示例
-title: "我的主页"          # 页面标题
-subtitle: "常用网站导航"   # 页面副标题
-
-# 分类和网站配置
-categories:
-  - name: "常用工具"          # 分类名称
-    icon: "fas fa-tools"      # 分类图标
-    sites:                    # 该分类下的网站列表
-      - name: "GitHub"        # 网站名称
-        url: "https://github.com"  # 网站链接
-        icon: "fab fa-github"      # 网站图标
-        description: "全球最大的代码托管平台"  # 网站描述
-      - name: "Google"
-        url: "https://google.com"
-        icon: "fab fa-google"
-        description: "全球最大的搜索引擎"
-      # 更多网站...
-  # 更多分类...
-```
-
-自定义页面配置示例（以"notes"为例）：
-
-1. 首先在`site.yml`的`navigation`部分添加对应的导航项：
-```yaml
-# config/user/site.yml
-navigation:
-  - name: "笔记"
-    icon: "fas fa-sticky-note"
-    id: "notes"
-    active: false
-```
-
-2. 然后创建`config/user/pages/notes.yml`配置文件：
-```yaml
-title: "我的笔记收藏"          # 页面标题
-subtitle: "学习和工作笔记资源"  # 页面副标题
-categories:                   # 该页面的分类和网站
-  - name: "编程笔记"
-    icon: "fas fa-code"
-    sites:
-      - name: "Python学习笔记"
-        url: "https://example.com/python-notes"
-        icon: "fab fa-python"
-        description: "Python编程技巧和案例"
-      # 更多网站...
-```
-#### 多层级嵌套配置
-
-MeNav 支持多层级嵌套配置，允许创建更复杂的内容组织结构。特别适用于书签页面，可以创建分类 -> 子分类 -> 分组 -> 网站的多层结构。
-
-##### 配置结构说明
-
-多层级嵌套配置支持以下层级结构：
-
-1. **二层级结构**（默认）：
-   ```
-   分类 (categories)
-   └── 网站 (sites)
-   ```
-
-2. **三层级结构**：
-   ```
-   分类 (categories)
-   └── 分组 (groups)
-       └── 网站 (sites)
-   ```
-
-3. **四层级结构**：
-   ```
-   分类 (categories)
-   └── 子分类 (subcategories)
-       └── 分组 (groups)
-           └── 网站 (sites)
-   ```
-
-##### 四层级结构示例
-
-```yaml
-categories:
-  - name: "技术资源"
-    icon: "fas fa-laptop-code"
-    subcategories:
-      - name: "前端开发"
-        icon: "fas fa-code"
-        groups:
-          - name: "框架库"
-            icon: "fas fa-cube"
-            sites:
-              - name: "React"
-                url: "https://reactjs.org/"
-                icon: "fab fa-react"
-                description: "React官方文档"
-              - name: "Vue.js"
-                url: "https://vuejs.org/"
-                icon: "fab fa-vuejs"
-                description: "Vue.js官方文档"
-          - name: "状态管理"
-            icon: "fas fa-database"
-            sites:
-              - name: "Redux"
-                url: "https://redux.js.org/"
-                icon: "fas fa-database"
-                description: "Redux状态管理"
-              - name: "Vuex"
-                url: "https://vuex.vuejs.org/"
-                icon: "fas fa-database"
-                description: "Vue状态管理"
-      - name: "后端开发"
-        icon: "fas fa-server"
-        groups:
-          - name: "Node.js生态"
-            icon: "fab fa-node-js"
-            sites:
-              - name: "Express"
-                url: "https://expressjs.com/"
-                icon: "fas fa-server"
-                description: "Node.js Web框架"
-              - name: "Koa"
-                url: "https://koajs.com/"
-                icon: "fas fa-leaf"
-                description: "下一代Node.js框架"
-```
-
-### 向后兼容性
-
-多层级嵌套配置完全向后兼容：
-
-- 现有的二层级结构（categories -> sites）配置无需修改即可继续使用
-- 系统会自动检测配置结构并应用相应的模板和样式
-- 可以在同一配置中混合使用不同层级结构（某些分类使用二级结构，某些使用三级或四级结构）
-- 模板系统会自动处理不同层级结构，无需手动指定模板类型
-
-
-> **📝提示**：
-> - 每个页面可以拥有不同的分类和网站
-> - 网站描述建议简洁明了，不超过30个字符，以确保显示美观
-> - 不同页面可以特化用于不同用途，如"工作"、"学习"、"娱乐"等
-> - 页面数量不限，但建议控制在合理范围内，避免导航过长
-
-### 三、配置文件结构示例
-
-**完整配置结构**：
-
-```
-config/user/
-├── site.yml         # 网站基本信息、字体、个人资料、社交媒体链接和导航菜单配置
-└── pages/
-    ├── home.yml     # 首页配置
-    ├── projects.yml # 项目页配置
-    ├── articles.yml # 文章页配置
-    ├── friends.yml  # 朋友页配置
-    └── notes.yml    # 自定义笔记页配置
-```
-
-> **📝 首次设置建议**：
-> - 首先复制`config/_default/`目录中的文件到`config/user/`目录
-> - 然后逐步修改各配置文件，保持目录结构一致
-> - 使用文本编辑器时注意保持正确的YAML格式和缩进
-
-</details>
+- 首次使用建议先完整复制 `config/_default/` 到 `config/user/`，再按需修改（因为配置采用“完全替换”策略，不会从默认配置补齐缺失项）。
+- 至少需要有 `config/user/site.yml`（缺失时构建会直接报错退出，避免生成空白站点）。
 
 ## 书签导入功能
 
-MeNav支持从浏览器导入书签，快速批量添加网站链接，无需手动录入。
+MeNav 支持从浏览器导入书签，快速批量添加网站链接；也支持与 MarksVault 扩展集成自动同步。
 
-### MarksVault 浏览器扩展集成
-
-[MarksVault](https://github.com/rbetree/MarksVault) 浏览器扩展提供与 MeNav 的无缝集成：
-
-- **一键推送书签**：通过扩展直接将书签推送到您的 MeNav 项目
-- **自动化处理**：推送的书签文件会被自动处理并转换为配置
-- **自动删除**：处理完成后，原始书签文件会被自动删除，以防止重复处理
-
-### 配置加载优先级
-
-书签配置按以下优先级加载（从高到低）：
-
-1. `config/user/pages/bookmarks.yml` （用户配置）
-2. `config/_default/pages/bookmarks.yml` （默认配置）
-
-**注意：** 书签配置采用完全替换策略，系统只会使用找到的最高优先级配置。
-
-### 导入步骤详解
-
-#### 使用 MarksVault 浏览器扩展（推荐）
-
-   - 安装 [MarksVault](https://github.com/rbetree/MarksVault) 浏览器扩展
-   - 在浏览器中登录并授权
-   - 使用扩展任务页中新建任务，将书签推送到您的 MeNav 项目
-   - 系统将自动处理并部署更新后的导航站
-
-#### 手动导入
-<details>
-<summary>点击展开</summary>
-
-1. **从浏览器导出html书签**
-
-2. **导入书签到MeNav**
-   
-   **GitHub Pages方式**:
-   - Fork本仓库后，在您的仓库中创建`bookmarks`目录
-   - 上传HTML格式书签文件到此目录
-   - GitHub Actions会自动处理文件并生成配置
-   
-   **本地开发方式**:
-   - 在项目根目录创建`bookmarks`文件夹
-   - 复制HTML书签文件到此文件夹
-   - 运行`npm run import-bookmarks`命令处理书签文件
-   - 系统生成配置文件后即可使用`npm run dev`预览
-
-#### 根路径书签处理
-
-如果HTML书签文件中存在`不在任何文件夹内`的根路径书签，系统会：
-- 自动创建名为"根目录书签"的特殊分类
-- 该分类始终位于所有其他分类之前（第一位）
-- 只有存在根路径书签时才会创建该分类
-
-</details>
-
-> 💡 *版本管理建议*：若你希望每次导入书签生成的 `bookmarks.yml` 内容保持确定性（避免因时间戳导致的无意义 diff），可在运行导入时设置环境变量：`MENAV_BOOKMARKS_DETERMINISTIC=1`。
-
-> 生成的配置可在`config/user/pages/bookmarks.yml`中查看和编辑
+完整说明请直接看：[`bookmarks/README.md`](bookmarks/README.md)（以该文档为准）。
 
 ## 常见问题
 
 <details>
 <summary>如何自定义Handlebars模板？</summary>
-MeNav现在使用Handlebars模板系统，您可以通过以下步骤自定义模板：
-
-1. **基本修改**：Fork项目后，您可以编辑`templates`目录下的模板文件
-2. **结构说明**：
-   - `layouts`：包含整体页面布局模板
-   - `pages`：包含各页面的主要内容模板
-   - `components`：包含可复用的组件模板
-3. **组件扩展**：创建新的组件模板时，需要在generator.js中注册，才能通过`{{> component-name}}`语法使用
-4. **自定义页面**：新增页面需要在`templates/pages`添加模板，并确保有对应的配置文件
-
-修改模板后，需要重新构建项目以应用更改。
+模板系统完整说明请见：[`templates/README.md`](templates/README.md)。
 </details>
 
 <details>

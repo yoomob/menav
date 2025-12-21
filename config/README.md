@@ -5,9 +5,14 @@
 - [目录概述](#目录概述)
 - [配置目录结构](#配置目录结构)
 - [配置加载机制](#配置加载机制)
+- [推荐用法](#推荐用法)
 - [模块化配置文件](#模块化配置文件)
   - [网站基础配置](#网站基础配置)
   - [页面配置](#页面配置)
+- [配置详解](#配置详解)
+  - [site.yml 常用字段](#siteyml-常用字段)
+  - [pages/ 页面配置](#pages-页面配置)
+  - [多层级嵌套配置（2-4层）](#多层级嵌套配置2-4层)
 - [配置优先级](#配置优先级)
 - [配置示例](#配置示例)
 - [最佳实践](#最佳实践)
@@ -46,6 +51,16 @@ MeNav 配置系统采用“完全替换”策略（不合并），按以下优�
 
 也就是说：`config/user/` 一旦存在，就需要包含一套完整的配置（例如 `site.yml` 与必要的 `pages/*.yml`），系统不会把缺失部分从默认配置补齐。
 
+## 推荐用法
+
+为避免文档与配置字段长期不同步，建议按以下方式使用与维护：
+
+1. **首次使用**：完整复制 `config/_default/` 到 `config/user/`，再按需修改。
+2. **字段与结构的权威参考**：
+   - 全局配置：[`_default/site.yml`](_default/site.yml)
+   - 页面配置：[`_default/pages/`](_default/pages/)
+3. **多层级嵌套书签示例**：[`_default/pages/bookmarks-four-level.yml`](_default/pages/bookmarks-four-level.yml)（2~4 层结构均有覆盖）
+
 ## 模块化配置文件
 
 ### 网站基础配置
@@ -71,6 +86,76 @@ MeNav 配置系统采用“完全替换”策略（不合并），按以下优�
 - `friends.yml`: 友情链接配置
 - `bookmarks.yml`: 书签页面配置
 - 自定义页面配置
+
+## 配置详解
+
+本章节用于补齐“怎么配才是对的”这类细节说明。为了避免示例长期过时，字段与结构的权威参考始终以默认配置为准：
+
+- 全局配置：[`_default/site.yml`](_default/site.yml)
+- 页面配置：[`_default/pages/`](_default/pages/)
+
+### site.yml 常用字段
+
+`site.yml` 中字段较多，以下是常用项的解释与注意点（完整字段请以默认配置为准）：
+
+1. **基础信息**
+   - `title`：站点标题
+   - `description`：站点描述（SEO/分享）
+   - `author`：作者/署名
+   - `favicon`、`logo_text`：站点图标与左上角 Logo 文本
+
+2. **图标模式（隐私相关）**
+   - `icons.mode: favicon | manual`
+   - `favicon`：会请求第三方服务（Google）获取站点 favicon，失败自动回退到 Font Awesome 图标
+   - `manual`：完全使用手动 Font Awesome 图标，不发起外部请求（适合内网/离线/隐私敏感场景）
+
+3. **字体**
+   - `fonts.*.source: google | system`
+   - `system`：使用系统字体，加载更快；`google`：可选字体更多但可能受网络影响
+   - 中文站点建议选择支持中文与字重的字体（如 `Noto Sans SC`）；请确保所选字体包含配置的字重，否则可能显示异常
+
+4. **顶部欢迎信息与社交链接**
+   - `profile`：首页顶部欢迎信息
+   - `social`：侧边栏底部社交链接
+   - `profile.description` 可写较长文本，用于放置个性化介绍或使用说明
+
+5. **导航**
+   - `navigation[]`：页面入口列表，`id` 需唯一，并与 `pages/` 中配置文件名对应（例如 `id: home` 对应 `pages/home.yml`）
+   - 只允许一个导航项 `active: true` 作为默认页
+   - 图标使用 Font Awesome 类名字符串（例如 `fas fa-home`、`fab fa-github`）
+   - 导航显示顺序与数组顺序一致，可通过调整数组顺序改变导航顺序
+
+### pages/ 页面配置
+
+页面配置位于 `pages/*.yml`，每个文件对应一个页面内容，文件名与导航 `id` 对应：
+
+- `pages/home.yml`：首页（通常是 `categories -> sites`）
+- `pages/projects.yml` / `articles.yml` / `friends.yml`：示例页面（可按需删改）
+- `pages/bookmarks.yml`：书签页（通常由导入脚本生成，也可以手动维护）
+
+> 提示：自定义页面时，先在 `site.yml` 的 `navigation` 中增加一个 `id`，再创建同名的 `pages/<id>.yml`。
+>
+> 站点描述建议简洁（例如不超过 30 个字符），以保证卡片展示更美观。
+
+### 多层级嵌套配置（2-4层）
+
+书签与分类支持 2~4 层嵌套，用于更好组织大量站点。建议直接参考默认示例：
+
+- 四层结构示例：[`_default/pages/bookmarks-four-level.yml`](_default/pages/bookmarks-four-level.yml)
+
+层级命名约定（自顶向下）：
+
+1. `categories`：顶层分类
+2. `subcategories`：子分类
+3. `groups`：分组
+4. `subgroups`：子分组
+5. `sites`：站点（叶子节点）
+
+#### 向后兼容性
+
+- 原有二层结构（`categories -> sites`）无需修改即可继续使用
+- 系统会自动识别层级结构并匹配对应的模板/样式
+- 允许在同一份配置中混用不同层级（例如某些分类是二层，某些分类是三/四层）
 
 ## 配置优先级
 
@@ -172,6 +257,6 @@ categories:
    - 定期备份您的用户配置
 
 4. **配置验证**:
-   - 修改配置后先在本地构建测试
-   - 使用 `npm run dev` 预览更改效果
-   - 确保 YAML 语法正确无误 
+   - 修改配置后运行 `npm run check`（语法检查 + 单测 + 构建）
+   - 需要本地预览时运行 `npm run dev`（命令入口见 [`../README.md#快速开始`](../README.md#快速开始)）
+   - 确保 YAML 语法正确无误
