@@ -117,7 +117,7 @@ MeNav 配置系统采用“完全替换”策略（不合并），按以下优�
 4. **顶部欢迎信息与社交链接**
    - `profile`：首页顶部欢迎信息
    - `social`：侧边栏底部社交链接
-   - `profile.description` 可写较长文本，用于放置个性化介绍或使用说明
+   - `profile.title` / `profile.subtitle`：分别对应首页顶部主标题与副标题
 
 5. **导航**
    - `navigation[]`：页面入口列表，`id` 需唯一，并与 `pages/` 中配置文件名对应（例如 `id: home` 对应 `pages/home.yml`）
@@ -200,7 +200,6 @@ keywords: "导航,网址,书签,个人主页"
 profile:
   title: "个人导航站"
   subtitle: "我收藏的精选网站"
-  description: "这是一个用于快速访问常用网站的个人导航页面。"
 
 # 字体配置
 fonts:

@@ -350,7 +350,6 @@ function ensureConfigDefaults(config) {
   result.profile = result.profile || {};
   result.profile.title = result.profile.title || '欢迎使用';
   result.profile.subtitle = result.profile.subtitle || 'MeNav个人导航系统';
-  result.profile.description = result.profile.description || '简单易用的个人导航站点';
 
   // 处理站点默认值的辅助函数
   function processSiteDefaults(site) {
@@ -687,7 +686,6 @@ function generatePageContent(pageId, data) {
                 <div class="welcome-section">
                     <h2>${escapeHtml(profile.title || '欢迎使用')}</h2>
                     <h3>${escapeHtml(profile.subtitle || '个人导航站')}</h3>
-                    <p class="subtitle">${escapeHtml(profile.description || '快速访问您的常用网站')}</p>
                 </div>
 ${generateCategories(data.categories)}`;
     } else {

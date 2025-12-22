@@ -98,7 +98,6 @@ templates/
 <div class="welcome-section">
     <h2>{{profile.title}}</h2>
     <h3>{{profile.subtitle}}</h3>
-    <p class="subtitle">{{profile.description}}</p>
 </div>
 {{#each categories}}
     {{> category}}
