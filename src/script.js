@@ -426,10 +426,32 @@ window.MeNav = {
 };
 
 // 多层级嵌套书签功能
+function getCollapsibleNestedContainers(root) {
+    if (!root) return [];
+    const headers = root.querySelectorAll(
+        '.category > .category-header[data-toggle="category"], .group > .group-header[data-toggle="group"]'
+    );
+    return Array.from(headers).map(header => header.parentElement).filter(Boolean);
+}
+
+function isNestedContainerCollapsible(container) {
+    if (!container) return false;
+
+    if (container.classList.contains('category')) {
+        return Boolean(container.querySelector(':scope > .category-header[data-toggle="category"]'));
+    }
+
+    if (container.classList.contains('group')) {
+        return Boolean(container.querySelector(':scope > .group-header[data-toggle="group"]'));
+    }
+
+    return false;
+}
+
 window.MeNav.expandAll = function() {
     const activePage = document.querySelector('.page.active');
     if (activePage) {
-        activePage.querySelectorAll('.category.collapsed, .group.collapsed').forEach(element => {
+        getCollapsibleNestedContainers(activePage).forEach(element => {
             element.classList.remove('collapsed');
             saveToggleState(element, 'expanded');
         });
@@ -439,7 +461,7 @@ window.MeNav.expandAll = function() {
 window.MeNav.collapseAll = function() {
     const activePage = document.querySelector('.page.active');
     if (activePage) {
-        activePage.querySelectorAll('.category:not(.collapsed), .group:not(.collapsed)').forEach(element => {
+        getCollapsibleNestedContainers(activePage).forEach(element => {
             element.classList.add('collapsed');
             saveToggleState(element, 'collapsed');
         });
@@ -451,8 +473,9 @@ window.MeNav.toggleCategories = function() {
     const activePage = document.querySelector('.page.active');
     if (!activePage) return;
     
-    const allElements = activePage.querySelectorAll('.category, .group');
-    const collapsedElements = activePage.querySelectorAll('.category.collapsed, .group.collapsed');
+    const allElements = getCollapsibleNestedContainers(activePage);
+    const collapsedElements = allElements.filter(element => element.classList.contains('collapsed'));
+    if (allElements.length === 0) return;
     
     // 如果收起的数量 >= 总数的一半，执行展开；否则执行收起
     if (collapsedElements.length >= allElements.length / 2) {
@@ -505,6 +528,7 @@ window.MeNav.getNestedStructure = function() {
 
 // 切换嵌套元素
 function toggleNestedElement(container) {
+    if (!isNestedContainerCollapsible(container)) return;
     const isCollapsed = container.classList.contains('collapsed');
     
     if (isCollapsed) {
@@ -1462,13 +1486,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }, index * 100);
         });
 
-        // 初始展开当前页面的子菜单
-        const activeNavItem = document.querySelector('.nav-item.active');
-        if (activeNavItem) {
-            const activeWrapper = activeNavItem.closest('.nav-item-wrapper');
-            if (activeWrapper) {
+        // 初始展开当前页面的子菜单：高亮项如果有子菜单，需要同步展开
+        document.querySelectorAll('.nav-item.active').forEach(activeItem => {
+            const activeWrapper = activeItem.closest('.nav-item-wrapper');
+            if (!activeWrapper) return;
+
+            const hasSubmenu = activeWrapper.querySelector('.submenu');
+            if (hasSubmenu) {
+                activeWrapper.classList.add('expanded');
             }
-        }
+        });
 
         // 导航项点击效果
         navItems.forEach(item => {
