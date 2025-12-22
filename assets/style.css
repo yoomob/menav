@@ -999,164 +999,140 @@ body .content.expanded {
     color: var(--accent-hover);
 }
 
-/* 多层级嵌套样式 */
-/* 层级2: 子分类 */
-.category-level-2 {
-    margin: 1rem 0 0.5rem 2rem;
-    padding: 1rem;
-    background: linear-gradient(145deg,
-        rgba(var(--card-bg-rgb), 0.8),
-        rgba(var(--card-bg-rgb), 0.6));
-    border-left: 3px solid var(--accent-color);
-    border-radius: var(--radius-lg);
-    width: calc(100% - 3.5rem);
+/* 多层级嵌套样式 - 扁平化设计 */
+
+/* 通用重置：移除所有嵌套层级的卡片背景和边框 */
+.category-level-2,
+.category-level-3,
+.category-level-4,
+.group-level-3,
+.group-level-4 {
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    width: 100%;
+    margin: 0;
 }
 
-/* 层级2: 子分类标题交互 */
+/* 层级2: 子分类 */
+.category-level-2 {
+    margin-top: 2rem;
+    margin-bottom: 1.5rem;
+    padding-left: 0.5rem;
+    border-left: none;
+}
+
+/* 层级2: 标题样式 */
 .category-level-2 .category-header {
-    cursor: pointer;
-    border-radius: var(--radius-md);
-    padding: 0.5rem;
-    margin: -0.5rem -0.5rem 1rem -0.5rem;
-    transition: all var(--transition-normal);
+    margin: 0 0 1rem 0;
+    padding: 0.5rem 0;
+    background: none;
+    border-bottom: 1px solid var(--border-color);
+    border-radius: 0;
 }
 
 .category-level-2 .category-header:hover {
-    transform: translateY(-2px);
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-}
-
-.category-level-2 .category-header:active {
-    transform: translateY(0);
+    background: none;
+    transform: none;
 }
 
 .category-level-2 .category-header h3 {
-    font-size: 1.1rem;
-    margin-bottom: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
     color: var(--text-bright);
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    letter-spacing: 0.2px;
+    gap: 0.8rem;
 }
 
 .category-level-2 .category-header h3 i {
     color: var(--accent-color);
     font-size: 1.2rem;
-    transition: all 0.3s ease;
-}
-
-.category-level-2 .category-header:hover h3 i {
-    transform: scale(1.1);
-    color: var(--accent-hover);
+    opacity: 0.9;
 }
 
 /* 层级3: 分组 */
 .group-level-3, .category-level-3 {
-    margin: 0.5rem 0 0.1rem 1rem;
-    padding: 0.5rem;
-    background: rgba(var(--card-bg-rgb), 0.4);
-    border-left: 2px solid var(--secondary-color);
-    border-radius: var(--radius-md);
-    width: calc(100% - 1.7rem);
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    padding-left: 0.5rem;
 }
 
-/* 层级3: 分组/分类标题交互 */
+/* 层级3: 标题样式 */
 .group-level-3 .group-header,
 .category-level-3 .category-header {
-    cursor: pointer;
-    border-radius: var(--radius-md);
-    padding: 0.4rem;
-    margin: -0.4rem -0.4rem 0.5rem -0.4rem;
-    transition: all var(--transition-normal);
+    margin: 0 0 0.8rem 0;
+    padding: 0.3rem 0;
+    background: none;
 }
 
 .group-level-3 .group-header:hover,
 .category-level-3 .category-header:hover {
-    transform: translateY(-2px);
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-}
-
-.group-level-3 .group-header:active,
-.category-level-3 .category-header:active {
-    transform: translateY(0);
+    background: none;
+    transform: none;
 }
 
 .group-level-3 .group-header h4,
 .category-level-3 .category-header h4 {
-    font-size: 1rem;
-    margin-bottom: 0;
-    color: var(--text-bright);
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-color);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    letter-spacing: 0.2px;
+    gap: 0.6rem;
 }
 
 .group-level-3 .group-header h4 i,
 .category-level-3 .category-header h4 i {
-    color: var(--secondary-color);
-    font-size: 1.1rem;
-    transition: all 0.3s ease;
+    color: var(--text-muted);
+    font-size: 1rem;
 }
 
-.group-level-3 .group-header:hover h4 i,
-.category-level-3 .category-header:hover h4 i {
-    transform: scale(1.1);
-}
-
-/* 层级4: 更深层次的分组 */
+/* 层级4: 子分组 */
 .group-level-4, .category-level-4 {
-    margin: 0.6rem 0 0.2rem 1rem;
-    padding: 0.6rem;
-    background: rgba(var(--card-bg-rgb), 0.2);
-    border-left: 1px solid var(--tertiary-color);
-    border-radius: var(--radius-md);
-    width: calc(100% - 1.8rem);
+    margin-top: 1rem;
+    margin-bottom: 0.8rem;
+    padding-left: 0.5rem;
 }
 
-/* 层级4: 分组/分类标题交互 */
+/* 层级4: 标题样式 */
 .group-level-4 .group-header,
 .category-level-4 .category-header {
-    cursor: pointer;
-    border-radius: var(--radius-md);
-    padding: 0.4rem;
-    margin: -0.4rem -0.4rem 0.6rem -0.4rem;
-    transition: all var(--transition-normal);
+    margin: 0 0 0.6rem 0;
+    padding: 0.2rem 0;
+    background: none;
 }
 
 .group-level-4 .group-header:hover,
 .category-level-4 .category-header:hover {
-    transform: translateY(-2px);
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-}
-
-.group-level-4 .group-header:active,
-.category-level-4 .category-header:active {
-    transform: translateY(0);
+    background: none;
+    transform: none;
 }
 
 .group-level-4 .group-header h5,
 .category-level-4 .category-header h5 {
     font-size: 0.95rem;
-    margin-bottom: 0;
-    color: var(--text-bright);
+    font-weight: 500;
+    color: var(--text-muted);
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    letter-spacing: 0.1px;
+    gap: 0.5rem;
 }
 
 .group-level-4 .group-header h5 i,
 .category-level-4 .category-header h5 i {
-    color: var(--tertiary-color);
-    font-size: 1rem;
-    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    opacity: 0.7;
 }
 
+/* 移除悬停时的缩放效果，保持简洁 */
+.category-level-2 .category-header:hover h3 i,
+.group-level-3 .group-header:hover h4 i,
+.category-level-3 .category-header:hover h4 i,
 .group-level-4 .group-header:hover h5 i,
 .category-level-4 .category-header:hover h5 i {
-    transform: scale(1.1);
+    transform: none;
 }
 
 /* 切换图标样式 */
@@ -1196,17 +1172,18 @@ body .content.expanded {
 }
 
 .category-level-2.collapsed > .category-header {
-    margin-bottom: -0.5rem;
+    margin-bottom: 0;
+    border-bottom: none;
 }
 
 .group-level-3.collapsed > .group-header,
 .category-level-3.collapsed > .category-header {
-    margin-bottom: -0.5rem;
+    margin-bottom: 0;
 }
 
 .group-level-4.collapsed > .group-header,
 .category-level-4.collapsed > .category-header {
-    margin-bottom: -0.4rem;
+    margin-bottom: 0;
 }
 
 .category.collapsed .toggle-icon i,
@@ -1255,29 +1232,28 @@ body .content.expanded {
 .category-level-3 .sites-grid,
 .group-level-4 .sites-grid,
 .category-level-4 .sites-grid {
-    margin-top: 0.8rem;
-    gap: 0.8rem;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    margin-top: 1rem;
+    gap: var(--spacing-md);
+    /* 保持与顶层一致的网格布局 */
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
 
 /* 响应式设计 - 嵌套结构 */
 @media (max-width: 768px) {
     .category-level-2 {
-        margin-left: 1rem;
-        padding: 1rem;
-        width: calc(100% - 2rem);
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        padding-left: 0;
     }
     
     .group-level-3, .category-level-3 {
-        margin-left: 0.5rem;
-        padding: 0.8rem;
-        width: calc(100% - 1.3rem);
+        margin-top: 1.2rem;
+        padding-left: 0;
     }
     
     .group-level-4, .category-level-4 {
-        margin-left: 0.3rem;
-        padding: 0.6rem;
-        width: calc(100% - 0.9rem);
+        margin-top: 1rem;
+        padding-left: 0;
     }
     
     .category-level-2 .sites-grid,
@@ -1285,27 +1261,28 @@ body .content.expanded {
     .category-level-3 .sites-grid,
     .group-level-4 .sites-grid,
     .category-level-4 .sites-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.6rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--spacing-sm);
     }
 }
 
 @media (max-width: 480px) {
     .category {
-        margin-left: 1rem;
-        padding: 1.5rem;
+        margin-left: 0.5rem;
+        margin-right: 0.5rem;
+        padding: 1rem;
     }
     
     .category-level-2, .group-level-3, .category-level-3 {
-        margin-left: 0.5rem;
-        padding: 0.8rem;
-        width: calc(100% - 1rem);
+        margin-left: 0;
+        padding-left: 0;
+        width: 100%;
     }
     
     .group-level-4, .category-level-4 {
-        margin-left: 0.3rem;
-        padding: 0.6rem;
-        width: calc(100% - 0.6rem);
+        margin-left: 0;
+        padding-left: 0;
+        width: 100%;
     }
     
     .category-level-2 .sites-grid,
