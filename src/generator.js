@@ -657,13 +657,10 @@ function generateSocialLinks(social) {
 
     // 回退到原始生成方法
     return social.map(link => `
-                <a href="${escapeHtml(link.url)}" class="nav-item" target="_blank">
-                    <div class="icon-container">
-                        <i class="${escapeHtml(link.icon || 'fas fa-link')}"></i>
-                    </div>
-                    <span class="nav-text">${escapeHtml(link.name || '社交链接')}</span>
-                    <i class="fas fa-external-link-alt external-icon"></i>
-                </a>`).join('\n');
+                    <a href="${escapeHtml(link.url)}" class="social-icon" target="_blank" rel="noopener" title="${escapeHtml(link.name || '社交链接')}" aria-label="${escapeHtml(link.name || '社交链接')}" data-type="social-link" data-name="${escapeHtml(link.name || '社交链接')}" data-url="${escapeHtml(link.url)}" data-icon="${escapeHtml(link.icon || 'fas fa-link')}">
+                        <i class="${escapeHtml(link.icon || 'fas fa-link')}" aria-hidden="true"></i>
+                        <span class="nav-text visually-hidden" data-editable="social-link-name">${escapeHtml(link.name || '社交链接')}</span>
+                    </a>`).join('\n');
 }
 
 // 生成页面内容（包括首页和其他页面）

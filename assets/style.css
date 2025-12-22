@@ -107,6 +107,19 @@ html.preload * {
     transition: none !important;
 }
 
+/* 可访问性：视觉隐藏但保留屏幕阅读器可读 */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 /* 主题切换按钮 */
 .theme-toggle {
     position: fixed;
@@ -292,10 +305,11 @@ body.loaded .layout {
     transform: translateZ(0);
     height: 100vh;
     display: grid;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto 1fr auto auto;
     grid-template-areas: 
         "header"
         "content"
+        "social"
         "footer";
     scrollbar-width: thin;
     scrollbar-color: var(--scrollbar-color) transparent;
@@ -330,12 +344,14 @@ body.loaded .layout {
     gap: 2px;
 }
 
-/* 减小折叠状态下的版权区域高度 */
-.sidebar.collapsed .copyright {
-    padding: 0.4rem;
+/* 折叠状态下隐藏底部版权区域（不占位） */
+.sidebar.collapsed .sidebar-footer {
+    padding: 0;
     height: 0;
     min-height: 0;
-    border-top: none;
+    margin: 0;
+    overflow: hidden;
+    border: none;
 }
 
 .sidebar.collapsed .sidebar-content::-webkit-scrollbar {
@@ -601,10 +617,10 @@ body.loaded .layout {
     text-align: center;
 }
 
-/* 折叠状态下的版权区域 */
-.sidebar.collapsed .copyright {
-    opacity: 0;
-    visibility: hidden; /* 确保完全隐藏 */
+/* 折叠状态下：底部区域不可见且不可交互 */
+.sidebar.collapsed .sidebar-footer {
+    visibility: hidden;
+    pointer-events: none;
 }
 
 /* 主内容区域 - 修复滚动条问题 */
@@ -1747,14 +1763,26 @@ body .content.expanded {
         width: var(--sidebar-width);
     }
     
-    .sidebar.collapsed .logo h1,
-    .sidebar.collapsed .nav-item .nav-text,
-    .sidebar.collapsed .nav-item .external-icon,
-    .sidebar.collapsed .copyright {
-        opacity: 1;
-        transform: none;
-        width: auto;
-    }
+	    .sidebar.collapsed .logo h1,
+	    .sidebar.collapsed .nav-item .nav-text,
+	    .sidebar.collapsed .nav-item .external-icon {
+	        opacity: 1;
+	        transform: none;
+	        width: auto;
+	    }
+
+	    .sidebar.collapsed .sidebar-footer {
+	        height: auto;
+	        padding: 1rem 1.2rem;
+	        visibility: visible;
+	        pointer-events: auto;
+	        border-top: 1px solid var(--border-color);
+	    }
+
+	    .sidebar.collapsed .sidebar-social {
+	        padding: 0.2rem 1.2rem 0.8rem;
+	        flex-direction: row;
+	    }
     
     .sidebar.collapsed .nav-item {
         padding: 0.6rem 0.8rem;
@@ -2144,8 +2172,48 @@ body .content.expanded {
     transition: gap 0.3s ease;
 }
 
-/* 侧边栏底部区域 - 版权信息 */
-.sidebar .copyright {
+/* 侧边栏底部：社交图标（位于 sidebar-footer 上方） */
+.sidebar-social {
+    grid-area: social;
+    padding: 0.2rem 1.2rem 0.8rem;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+}
+
+.social-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem;
+    border-radius: var(--radius-full);
+    color: var(--nav-item-color);
+    text-decoration: none;
+    transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+.social-icon:hover {
+    color: var(--accent-color);
+    transform: translateY(-1px);
+}
+
+.social-icon:active {
+    transform: translateY(0);
+}
+
+.social-icon:focus-visible {
+    outline: 2px solid rgba(74, 158, 255, 0.35);
+    outline-offset: 2px;
+}
+
+.social-icon i {
+    width: auto;
+    font-size: 1.2rem;
+}
+
+/* 侧边栏底部：版权信息 */
+.sidebar-footer {
     grid-area: footer;
     padding: 1rem 1.2rem;
     text-align: center;
@@ -2153,8 +2221,18 @@ body .content.expanded {
     font-size: 0.85rem;
     border-top: 1px solid var(--border-color);
     background-color: var(--sidebar-bg); /* 使用变量 */
-    margin-top: 0;
     transition: background-color 0.3s ease, color 0.3s ease, opacity 0.3s ease;
+}
+
+.sidebar-footer .copyright {
+    margin: 0;
+}
+
+.sidebar.collapsed .sidebar-social {
+    padding: 0.2rem 0.5rem 0.8rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
 }
 
 .copyright a {
