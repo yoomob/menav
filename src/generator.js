@@ -441,6 +441,20 @@ function getSubmenuForNavItem(navItem, config) {
 }
 
 /**
+ * 将 JSON 字符串安全嵌入到 <script> 中，避免出现 `</script>` 结束标签导致脚本块被提前终止。
+ * 说明：返回值仍是合法 JSON，JSON.parse 后数据不变。
+ * @param {string} jsonString JSON 字符串
+ * @returns {string} 安全的 JSON 字符串
+ */
+function makeJsonSafeForHtmlScript(jsonString) {
+  if (typeof jsonString !== 'string') {
+    return '';
+  }
+
+  return jsonString.replace(/<\/script/gi, '<\\/script');
+}
+
+/**
  * 准备渲染数据，添加模板所需的特殊属性
  * @param {Object} config 配置对象
  * @returns {Object} 增强的渲染数据
@@ -486,11 +500,13 @@ function prepareRenderData(config) {
   renderData.homePageId = renderData.navigation && renderData.navigation[0] ? renderData.navigation[0].id : null;
 
   // 添加序列化的配置数据，用于浏览器扩展（确保包含 homePageId 等处理结果）
-  renderData.configJSON = JSON.stringify({
-    version: process.env.npm_package_version || '1.0.0',
-    timestamp: new Date().toISOString(),
-    data: renderData // 使用经过处理的renderData而不是原始config
-  });
+  renderData.configJSON = makeJsonSafeForHtmlScript(
+    JSON.stringify({
+      version: process.env.npm_package_version || '1.0.0',
+      timestamp: new Date().toISOString(),
+      data: renderData // 使用经过处理的renderData而不是原始config
+    })
+  );
 
   // 为Handlebars模板特别准备navigationData数组
   renderData.navigationData = renderData.navigation;
