@@ -121,7 +121,7 @@ MeNav 配置系统采用“完全替换”策略（不合并），按以下优�
 
 5. **导航**
    - `navigation[]`：页面入口列表，`id` 需唯一，并与 `pages/` 中配置文件名对应（例如 `id: home` 对应 `pages/home.yml`）
-   - 只允许一个导航项 `active: true` 作为默认页
+   - 默认首页由 `navigation` 数组顺序决定：**第一项即为首页（默认打开页）**，不再使用 `active` 字段
    - 图标使用 Font Awesome 类名字符串（例如 `fas fa-home`、`fab fa-github`）
    - 导航显示顺序与数组顺序一致，可通过调整数组顺序改变导航顺序
 
@@ -230,7 +230,6 @@ navigation:
   - name: "首页"
     icon: "fas fa-home"
     id: "home"
-    active: true
   - name: "项目"
     icon: "fas fa-project-diagram"
     id: "projects"

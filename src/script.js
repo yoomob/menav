@@ -641,7 +641,41 @@ function extractNestedData(element) {
 document.addEventListener('DOMContentLoaded', () => {
     // 先声明所有状态变量
     let isSearchActive = false;
-    let currentPageId = 'home';
+    // 首页不再固定为 "home"：以导航顺序第一项为准
+    const homePageId = (() => {
+        // 1) 优先从生成端注入的配置数据读取（保持与实际导航顺序一致）
+        try {
+            const config = window.MeNav && typeof window.MeNav.getConfig === 'function'
+                ? window.MeNav.getConfig()
+                : null;
+            const injectedHomePageId = config && config.data && config.data.homePageId
+                ? String(config.data.homePageId).trim()
+                : '';
+            if (injectedHomePageId) return injectedHomePageId;
+            const nav = config && config.data && Array.isArray(config.data.navigation)
+                ? config.data.navigation
+                : null;
+            const firstId = nav && nav[0] && nav[0].id ? String(nav[0].id).trim() : '';
+            if (firstId) return firstId;
+        } catch (error) {
+            // 忽略解析错误，继续使用 DOM 推断
+        }
+
+        // 2) 回退到 DOM：取首个导航项的 data-page
+        const firstNavItem = document.querySelector('.nav-item[data-page]');
+        if (firstNavItem) {
+            const id = String(firstNavItem.getAttribute('data-page') || '').trim();
+            if (id) return id;
+        }
+
+        // 3) 最后兜底：取首个页面容器 id
+        const firstPage = document.querySelector('.page[id]');
+        if (firstPage && firstPage.id) return firstPage.id;
+
+        return 'home';
+    })();
+
+    let currentPageId = homePageId;
     let isInitialLoad = true;
     let isSidebarOpen = false;
     let isSearchOpen = false;
@@ -1257,9 +1291,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     } else {
                         // 如果没有激活的导航项，默认显示首页
-                        currentPageId = 'home';
+                        currentPageId = homePageId;
                         pages.forEach(page => {
-                            page.classList.toggle('active', page.id === 'home');
+                            page.classList.toggle('active', page.id === homePageId);
                         });
                     }
                 } catch (resetError) {
@@ -1489,7 +1523,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 立即执行初始化，不再使用requestAnimationFrame延迟
         // 显示首页
-        showPage('home');
+        showPage(homePageId);
 
         // 添加载入动画
         categories.forEach((category, index) => {

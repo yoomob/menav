@@ -462,13 +462,6 @@ function prepareRenderData(config) {
     // 移除警告日志，数据处理逻辑保留
   }
 
-  // 添加序列化的配置数据，用于浏览器扩展
-  renderData.configJSON = JSON.stringify({
-    version: process.env.npm_package_version || '1.0.0',
-    timestamp: new Date().toISOString(),
-    data: renderData // 使用经过处理的renderData而不是原始config
-  });
-
   // 添加导航项的活动状态标记和子菜单
   if (Array.isArray(renderData.navigation)) {
     renderData.navigation = renderData.navigation.map((item, index) => {
@@ -476,7 +469,7 @@ function prepareRenderData(config) {
         ...item,
         isActive: index === 0, // 默认第一项为活动项
         id: item.id || `nav-${index}`,
-        active: index === 0 // 兼容原有逻辑
+        active: index === 0 // 保持旧模板兼容（由顺序决定，不读取配置的 active 字段）
       };
 
       // 使用辅助函数获取子菜单
@@ -488,6 +481,16 @@ function prepareRenderData(config) {
       return navItem;
     });
   }
+
+  // 首页（默认页）规则：navigation 顺序第一项即首页
+  renderData.homePageId = renderData.navigation && renderData.navigation[0] ? renderData.navigation[0].id : null;
+
+  // 添加序列化的配置数据，用于浏览器扩展（确保包含 homePageId 等处理结果）
+  renderData.configJSON = JSON.stringify({
+    version: process.env.npm_package_version || '1.0.0',
+    timestamp: new Date().toISOString(),
+    data: renderData // 使用经过处理的renderData而不是原始config
+  });
 
   // 为Handlebars模板特别准备navigationData数组
   renderData.navigationData = renderData.navigation;
@@ -814,6 +817,17 @@ function renderPage(pageId, config) {
     Object.assign(data, config[pageId]);
   }
 
+  // 首页标题规则：使用 site.yml 的 profile 覆盖首页（导航第一项）的 title/subtitle 显示
+  const homePageId = config.homePageId
+    || (Array.isArray(config.navigation) && config.navigation[0] ? config.navigation[0].id : null)
+    || 'home';
+  // 供模板判断“当前是否首页”
+  data.homePageId = homePageId;
+  if (pageId === homePageId && config.profile) {
+    if (config.profile.title !== undefined) data.title = config.profile.title;
+    if (config.profile.subtitle !== undefined) data.subtitle = config.profile.subtitle;
+  }
+
   // 检查页面配置中是否指定了模板
   let templateName = pageId;
   if (config[pageId] && config[pageId].template) {
@@ -842,11 +856,6 @@ function generateAllPagesHTML(config) {
       // 渲染页面内容
       pages[pageId] = renderPage(pageId, config);
     });
-  }
-
-  // 确保首页存在
-  if (!pages.home) {
-    pages.home = renderPage('home', config);
   }
 
   // 确保搜索结果页存在
@@ -989,7 +998,9 @@ function main() {
     }
 }
 
-main();
+if (require.main === module) {
+    main();
+}
 
 // 导出供测试使用的函数
 module.exports = {
@@ -1002,4 +1013,3 @@ module.exports = {
   renderTemplate,
   generateAllPagesHTML
 };
-

@@ -794,8 +794,7 @@ function updateNavigationFile(filePath) {
       navConfig.push({
         name: '书签',
         icon: 'fas fa-bookmark',
-        id: 'bookmarks',
-        active: false
+        id: 'bookmarks'
       });
       
       // 更新文件

@@ -50,12 +50,11 @@ social:
     url: https://steam.com
     icon: fab fa-steam
 
-# 导航配置
+# 导航配置（顺序第一项即首页/默认打开页）
 navigation:
-  - name: 首页        # 菜单名称
-    icon: fas fa-home  # Font Awesome 图标类
-    id: home           # 页面标识符（唯一，需与 pages/home.yml 对应）
-    active: true       # 是否默认激活（全局仅一个 true）
+  - name: 常用        # 菜单名称
+    icon: fas fa-star  # Font Awesome 图标类
+    id: home           # 页面标识符（唯一，需与 pages/<id>.yml 对应）
   - name: 项目
     icon: fas fa-project-diagram
     id: projects
