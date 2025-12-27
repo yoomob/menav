@@ -64,11 +64,13 @@ test('templates：subgroups（第4层）应可渲染到页面', () => {
 
   const category = fs.readFileSync(path.join(__dirname, '..', 'templates', 'components', 'category.hbs'), 'utf8');
   const group = fs.readFileSync(path.join(__dirname, '..', 'templates', 'components', 'group.hbs'), 'utf8');
+  const pageHeader = fs.readFileSync(path.join(__dirname, '..', 'templates', 'components', 'page-header.hbs'), 'utf8');
   const siteCard = fs.readFileSync(path.join(__dirname, '..', 'templates', 'components', 'site-card.hbs'), 'utf8');
   const page = fs.readFileSync(path.join(__dirname, '..', 'templates', 'pages', 'bookmarks.hbs'), 'utf8');
 
   hbs.registerPartial('category', category);
   hbs.registerPartial('group', group);
+  hbs.registerPartial('page-header', pageHeader);
   hbs.registerPartial('site-card', siteCard);
 
   const tpl = hbs.compile(page);
@@ -165,12 +167,12 @@ test('ensureUserConfigInitialized/ensureUserSiteYmlExists：可在空目录初�
   try {
     fs.mkdirSync('config/_default/pages', { recursive: true });
     fs.writeFileSync('config/_default/site.yml', 'title: Default\n', 'utf8');
-    fs.writeFileSync('config/_default/pages/home.yml', 'categories: []\n', 'utf8');
+    fs.writeFileSync('config/_default/pages/common.yml', 'categories: []\n', 'utf8');
 
     const init = ensureUserConfigInitialized();
     assert.equal(init.initialized, true);
     assert.ok(fs.existsSync('config/user/site.yml'));
-    assert.ok(fs.existsSync('config/user/pages/home.yml'));
+    assert.ok(fs.existsSync('config/user/pages/common.yml'));
 
     // 若 site.yml 已存在，应直接返回 true
     assert.equal(ensureUserSiteYmlExists(), true);

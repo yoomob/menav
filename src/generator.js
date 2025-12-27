@@ -1,6 +1,7 @@
 const fs = require('fs');
 const yaml = require('js-yaml');
 const path = require('path');
+const { execFileSync } = require('child_process');
 const Handlebars = require('handlebars');
 
 // 导入Handlebars助手函数
@@ -96,11 +97,11 @@ function renderTemplate(templateName, data, useLayout = true) {
             const genericTemplateContent = fs.readFileSync(genericTemplatePath, 'utf8');
             const genericTemplate = handlebars.compile(genericTemplateContent);
 
-            // 添加 pageId 到数据中，以便通用模板使用
-            const enhancedData = {
-                ...data,
-                pageId: templateName // 确保pageId在模板中可用
-            };
+    // 添加 pageId 到数据中，以便通用模板使用（优先保留原 pageId，避免回退时语义错位）
+    const enhancedData = {
+        ...data,
+        pageId: data && data.pageId ? data.pageId : templateName
+    };
 
             // 渲染页面内容
             const pageContent = genericTemplate(enhancedData);
@@ -255,17 +256,6 @@ function loadModularConfig(dirPath) {
         }
     }
 
-    // 如果site.yml中没有navigation配置，则回退到独立的navigation.yml
-    if (!config.navigation || config.navigation.length === 0) {
-        const navConfigPath = path.join(dirPath, 'navigation.yml');
-        const navConfig = safeLoadYamlConfig(navConfigPath);
-        if (navConfig) {
-            config.navigation = navConfig;
-            console.log('site.yml 中未找到导航配置，使用独立的 navigation.yml 文件');
-            console.log('提示：建议将导航配置迁移到 site.yml 中，以便统一管理');
-        }
-    }
-
     // 加载页面配置
     const pagesPath = path.join(dirPath, 'pages');
     if (fs.existsSync(pagesPath)) {
@@ -279,11 +269,6 @@ function loadModularConfig(dirPath) {
             if (fileConfig) {
                 // 提取文件名（不含扩展名）作为配置键
                 const configKey = path.basename(file, path.extname(file));
-
-                // 特殊处理home.yml中的categories字段
-                if (configKey === 'home' && fileConfig.categories) {
-                    config.categories = fileConfig.categories;
-                }
 
                 // 将页面配置添加到主配置对象
                 config[configKey] = fileConfig;
@@ -326,7 +311,6 @@ function ensureConfigDefaults(config) {
 
   result.profile = result.profile || {};
   result.social = result.social || [];
-  result.categories = result.categories || [];
   // 图标配置默认值
   result.icons = result.icons || {};
   // icons.mode: manual | favicon, 默认 favicon
@@ -367,16 +351,20 @@ function ensureConfigDefaults(config) {
     category.sites.forEach(processSiteDefaults);
   }
 
-  // 为首页的每个类别和站点设置默认值
-  result.categories = result.categories || [];
-  result.categories.forEach(processCategoryDefaults);
-
   // 为所有页面配置中的类别和站点设置默认值
   Object.keys(result).forEach(key => {
     const pageConfig = result[key];
-    // 检查是否是页面配置对象且包含categories数组
-    if (pageConfig && typeof pageConfig === 'object' && Array.isArray(pageConfig.categories)) {
+    // 检查是否是页面配置对象
+    if (!pageConfig || typeof pageConfig !== 'object') return;
+
+    // 传统结构：categories -> sites
+    if (Array.isArray(pageConfig.categories)) {
       pageConfig.categories.forEach(processCategoryDefaults);
+    }
+
+    // 扁平结构：sites（用于 friends/articles 等“无层级并列卡片”页面）
+    if (Array.isArray(pageConfig.sites)) {
+      pageConfig.sites.forEach(processSiteDefaults);
     }
   });
 
@@ -412,30 +400,8 @@ function getSubmenuForNavItem(navItem, config) {
     return null;
   }
 
-  // 首页页面添加子菜单（分类）
-  if (navItem.id === 'home' && Array.isArray(config.categories)) {
-    return config.categories;
-  }
-  // 书签页面添加子菜单（分类）
-  else if (navItem.id === 'bookmarks' && config.bookmarks && Array.isArray(config.bookmarks.categories)) {
-    return config.bookmarks.categories;
-  }
-  // 项目页面添加子菜单
-  else if (navItem.id === 'projects' && config.projects && Array.isArray(config.projects.categories)) {
-    return config.projects.categories;
-  }
-  // 文章页面添加子菜单
-  else if (navItem.id === 'articles' && config.articles && Array.isArray(config.articles.categories)) {
-    return config.articles.categories;
-  }
-  // 友链页面添加子菜单
-  else if (navItem.id === 'friends' && config.friends && Array.isArray(config.friends.categories)) {
-    return config.friends.categories;
-  }
-  // 通用处理：任意自定义页面的子菜单生成
-  else if (config[navItem.id] && config[navItem.id].categories && Array.isArray(config[navItem.id].categories)) {
-    return config[navItem.id].categories;
-  }
+  // 通用处理：任意页面的子菜单生成（基于 pages/<id>.yml 的 categories）
+  if (config[navItem.id] && Array.isArray(config[navItem.id].categories)) return config[navItem.id].categories;
 
   return null;
 }
@@ -452,6 +418,359 @@ function makeJsonSafeForHtmlScript(jsonString) {
   }
 
   return jsonString.replace(/<\/script/gi, '<\\/script');
+}
+
+/**
+ * 解析页面配置文件路径（优先 user，回退 _default）
+ * 注意：仅用于构建期读取文件元信息，不会把路径注入到页面/扩展配置中。
+ * @param {string} pageId 页面ID（与 pages/<id>.yml 文件名对应）
+ * @returns {string|null} 文件路径或 null
+ */
+function resolvePageConfigFilePath(pageId) {
+  if (!pageId) return null;
+
+  const candidates = [
+    path.join(process.cwd(), 'config', 'user', 'pages', `${pageId}.yml`),
+    path.join(process.cwd(), 'config', 'user', 'pages', `${pageId}.yaml`),
+    path.join(process.cwd(), 'config', '_default', 'pages', `${pageId}.yml`),
+    path.join(process.cwd(), 'config', '_default', 'pages', `${pageId}.yaml`),
+  ];
+
+  for (const filePath of candidates) {
+    try {
+      if (fs.existsSync(filePath)) return filePath;
+    } catch (e) {
+      // 忽略 IO 异常，继续尝试下一个候选
+    }
+  }
+
+  return null;
+}
+
+/**
+ * 尝试获取文件最后一次 git 提交时间（ISO 字符串）
+ * @param {string} filePath 文件路径
+ * @returns {string|null} ISO 字符串（UTC），失败返回 null
+ */
+function tryGetGitLastCommitIso(filePath) {
+  if (!filePath) return null;
+
+  try {
+    const relativePath = path.relative(process.cwd(), filePath).replace(/\\/g, '/');
+    const output = execFileSync(
+      'git',
+      ['log', '-1', '--format=%cI', '--', relativePath],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }
+    );
+    const raw = String(output || '').trim();
+    if (!raw) return null;
+
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return null;
+
+    return date.toISOString();
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * 获取文件 mtime（ISO 字符串）
+ * @param {string} filePath 文件路径
+ * @returns {string|null} ISO 字符串（UTC），失败返回 null
+ */
+function tryGetFileMtimeIso(filePath) {
+  if (!filePath) return null;
+
+  try {
+    const stats = fs.statSync(filePath);
+    const mtime = stats && stats.mtime ? stats.mtime : null;
+    if (!(mtime instanceof Date) || Number.isNaN(mtime.getTime())) return null;
+    return mtime.toISOString();
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * 计算页面配置文件“内容更新时间”（优先 git，回退 mtime）
+ * @param {string} pageId 页面ID
+ * @returns {{updatedAt: string, updatedAtSource: 'git'|'mtime'}|null}
+ */
+function getPageConfigUpdatedAtMeta(pageId) {
+  const filePath = resolvePageConfigFilePath(pageId);
+  if (!filePath) return null;
+
+  const gitIso = tryGetGitLastCommitIso(filePath);
+  if (gitIso) {
+    return { updatedAt: gitIso, updatedAtSource: 'git' };
+  }
+
+  const mtimeIso = tryGetFileMtimeIso(filePath);
+  if (mtimeIso) {
+    return { updatedAt: mtimeIso, updatedAtSource: 'mtime' };
+  }
+
+  return null;
+}
+
+/**
+ * 读取 articles 页面 RSS 缓存（Phase 2）
+ * - 缓存默认放在 dev/（仓库默认 gitignore）
+ * - 构建端只读缓存：缓存缺失/损坏时回退到 Phase 1（渲染来源站点分类）
+ * @param {string} pageId 页面ID（用于支持多个 articles 页面的独立缓存）
+ * @param {Object} config 全站配置（用于读取 site.rss.cacheDir）
+ * @returns {{items: Array<Object>, meta: Object}|null}
+ */
+function tryLoadArticlesFeedCache(pageId, config) {
+  if (!pageId) return null;
+
+  const cacheDirFromEnv = process.env.RSS_CACHE_DIR ? String(process.env.RSS_CACHE_DIR) : '';
+  const cacheDirFromConfig =
+    config && config.site && config.site.rss && config.site.rss.cacheDir ? String(config.site.rss.cacheDir) : '';
+  const cacheDir = cacheDirFromEnv || cacheDirFromConfig || 'dev';
+
+  const cacheBaseDir = path.isAbsolute(cacheDir) ? cacheDir : path.join(process.cwd(), cacheDir);
+  const cachePath = path.join(cacheBaseDir, `${pageId}.feed-cache.json`);
+  if (!fs.existsSync(cachePath)) return null;
+
+  try {
+    const raw = fs.readFileSync(cachePath, 'utf8');
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+
+    const articles = Array.isArray(parsed.articles) ? parsed.articles : [];
+    const items = articles
+      .map(a => {
+        const title = a && a.title ? String(a.title) : '';
+        const url = a && a.url ? String(a.url) : '';
+        if (!title || !url) return null;
+
+        return {
+          // 兼容 site-card partial 字段
+          name: title,
+          url,
+          icon: a && a.icon ? String(a.icon) : 'fas fa-pen',
+          description: a && a.summary ? String(a.summary) : '',
+
+          // Phase 2 文章元信息（只读展示）
+          publishedAt: a && a.publishedAt ? String(a.publishedAt) : '',
+          source: a && a.source ? String(a.source) : '',
+          // 文章来源站点首页 URL（用于按分类聚合展示；旧缓存可能缺失）
+          sourceUrl: a && a.sourceUrl ? String(a.sourceUrl) : '',
+
+          // 文章链接通常应在新标签页打开
+          external: true
+        };
+      })
+      .filter(Boolean);
+
+    return {
+      items,
+      meta: {
+        pageId: parsed.pageId || pageId,
+        generatedAt: parsed.generatedAt || '',
+        total: parsed.stats && Number.isFinite(parsed.stats.totalArticles) ? parsed.stats.totalArticles : items.length
+      }
+    };
+  } catch (e) {
+    console.warn(`[WARN] articles 缓存读取失败：${cachePath}（将回退 Phase 1）`);
+    return null;
+  }
+}
+
+function normalizeUrlKey(input) {
+  if (!input) return '';
+  try {
+    const u = new URL(String(input));
+    const origin = u.origin;
+    let pathname = u.pathname || '/';
+    // 统一去掉末尾斜杠（根路径除外），避免 https://a.com 与 https://a.com/ 不匹配
+    if (pathname !== '/' && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
+    return `${origin}${pathname}`;
+  } catch {
+    return String(input).trim();
+  }
+}
+
+function collectSitesRecursively(node, output) {
+  if (!node || typeof node !== 'object') return;
+
+  if (Array.isArray(node.subcategories)) node.subcategories.forEach(child => collectSitesRecursively(child, output));
+  if (Array.isArray(node.groups)) node.groups.forEach(child => collectSitesRecursively(child, output));
+  if (Array.isArray(node.subgroups)) node.subgroups.forEach(child => collectSitesRecursively(child, output));
+
+  if (Array.isArray(node.sites)) {
+    node.sites.forEach(site => {
+      if (site && typeof site === 'object') output.push(site);
+    });
+  }
+}
+
+/**
+ * articles Phase 2：按页面配置的“分类”聚合文章展示
+ * - 规则：某篇文章的 sourceUrl/source 归属到其来源站点（pages/articles.yml 中配置的站点）所在的分类
+ * - 兼容：旧缓存缺少 sourceUrl 时回退使用 source（站点名称）匹配
+ * @param {Array<Object>} categories 页面配置 categories（可包含更深层级）
+ * @param {Array<Object>} articlesItems Phase 2 文章条目（来自缓存）
+ * @returns {Array<{name: string, icon: string, items: Array<Object>}>}
+ */
+function buildArticlesCategoriesByPageCategories(categories, articlesItems) {
+  const safeItems = Array.isArray(articlesItems) ? articlesItems : [];
+  const safeCategories = Array.isArray(categories) ? categories : [];
+
+  // 若页面未配置分类，则回退为单一分类容器
+  if (safeCategories.length === 0) {
+    return [
+      {
+        name: '最新文章',
+        icon: 'fas fa-rss',
+        items: safeItems
+      }
+    ];
+  }
+
+  const categoryIndex = safeCategories.map(category => {
+    const sites = [];
+    collectSitesRecursively(category, sites);
+
+    const siteUrlKeys = new Set();
+    const siteNameKeys = new Set();
+    sites.forEach(site => {
+      const urlKey = normalizeUrlKey(site && site.url ? String(site.url) : '');
+      if (urlKey) siteUrlKeys.add(urlKey);
+      const nameKey = site && site.name ? String(site.name).trim().toLowerCase() : '';
+      if (nameKey) siteNameKeys.add(nameKey);
+    });
+
+    return { category, siteUrlKeys, siteNameKeys };
+  });
+
+  const buckets = categoryIndex.map(() => []);
+  const uncategorized = [];
+
+  safeItems.forEach(item => {
+    const sourceUrlKey = normalizeUrlKey(item && item.sourceUrl ? String(item.sourceUrl) : '');
+    const sourceNameKey = item && item.source ? String(item.source).trim().toLowerCase() : '';
+
+    let matchedIndex = -1;
+    if (sourceUrlKey) {
+      matchedIndex = categoryIndex.findIndex(idx => idx.siteUrlKeys.has(sourceUrlKey));
+    }
+    if (matchedIndex < 0 && sourceNameKey) {
+      matchedIndex = categoryIndex.findIndex(idx => idx.siteNameKeys.has(sourceNameKey));
+    }
+
+    if (matchedIndex < 0) {
+      uncategorized.push(item);
+      return;
+    }
+
+    buckets[matchedIndex].push(item);
+  });
+
+  const displayCategories = categoryIndex.map((idx, i) => ({
+    name: idx.category && idx.category.name ? String(idx.category.name) : '未命名分类',
+    icon: idx.category && idx.category.icon ? String(idx.category.icon) : 'fas fa-rss',
+    items: buckets[i]
+  }));
+
+  if (uncategorized.length > 0) {
+    displayCategories.push({
+      name: '其他',
+      icon: 'fas fa-ellipsis-h',
+      items: uncategorized
+    });
+  }
+
+  return displayCategories;
+}
+
+function tryLoadProjectsRepoCache(pageId, config) {
+  if (!pageId) return null;
+
+  const cacheDirFromEnv = process.env.PROJECTS_CACHE_DIR ? String(process.env.PROJECTS_CACHE_DIR) : '';
+  const cacheDirFromConfig =
+    config && config.site && config.site.github && config.site.github.cacheDir ? String(config.site.github.cacheDir) : '';
+  const cacheDir = cacheDirFromEnv || cacheDirFromConfig || 'dev';
+
+  const cacheBaseDir = path.isAbsolute(cacheDir) ? cacheDir : path.join(process.cwd(), cacheDir);
+  const cachePath = path.join(cacheBaseDir, `${pageId}.repo-cache.json`);
+  if (!fs.existsSync(cachePath)) return null;
+
+  try {
+    const raw = fs.readFileSync(cachePath, 'utf8');
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+
+    const repos = Array.isArray(parsed.repos) ? parsed.repos : [];
+    const map = new Map();
+    repos.forEach(r => {
+      const url = r && r.url ? String(r.url) : '';
+      if (!url) return;
+      map.set(url, {
+        language: r && r.language ? String(r.language) : '',
+        languageColor: r && r.languageColor ? String(r.languageColor) : '',
+        stars: Number.isFinite(r && r.stars) ? r.stars : null,
+        forks: Number.isFinite(r && r.forks) ? r.forks : null
+      });
+    });
+
+    return {
+      map,
+      meta: {
+        pageId: parsed.pageId || pageId,
+        generatedAt: parsed.generatedAt || ''
+      }
+    };
+  } catch (e) {
+    console.warn(`[WARN] projects 缓存读取失败：${cachePath}（将仅展示标题与描述）`);
+    return null;
+  }
+}
+
+function normalizeGithubRepoUrl(url) {
+  if (!url) return '';
+  try {
+    const u = new URL(String(url));
+    if (u.hostname.toLowerCase() !== 'github.com') return '';
+    const parts = u.pathname.split('/').filter(Boolean);
+    if (parts.length < 2) return '';
+    const owner = parts[0];
+    const repo = parts[1].replace(/\.git$/i, '');
+    if (!owner || !repo) return '';
+    return `https://github.com/${owner}/${repo}`;
+  } catch {
+    return '';
+  }
+}
+
+function applyRepoMetaToCategories(categories, repoMetaMap) {
+  if (!Array.isArray(categories) || !(repoMetaMap instanceof Map)) return;
+
+  const walk = (node) => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node.subcategories)) node.subcategories.forEach(walk);
+    if (Array.isArray(node.groups)) node.groups.forEach(walk);
+    if (Array.isArray(node.subgroups)) node.subgroups.forEach(walk);
+
+    if (Array.isArray(node.sites)) {
+      node.sites.forEach(site => {
+        if (!site || typeof site !== 'object' || !site.url) return;
+        const canonical = normalizeGithubRepoUrl(site.url);
+        if (!canonical) return;
+        const meta = repoMetaMap.get(canonical);
+        if (!meta) return;
+
+        site.language = meta.language || '';
+        site.languageColor = meta.languageColor || '';
+        site.stars = meta.stars;
+        site.forks = meta.forks;
+      });
+    }
+  };
+
+  categories.forEach(walk);
 }
 
 /**
@@ -527,8 +846,7 @@ function loadConfig() {
     navigation: [],
     fonts: {},
     profile: {},
-    social: [],
-    categories: []
+    social: []
   };
 
   // 检查模块化配置来源是否存在
@@ -556,20 +874,10 @@ function loadConfig() {
     // 2. 次高优先级: config/_default/ 目录
     config = loadModularConfig('config/_default');
   } else {
-    // 3. 最低优先级: 旧版单文件配置 (config.yml or config.yaml)
-    const legacyConfigPath = fs.existsSync('config.yml') ? 'config.yml' : 'config.yaml';
-
-    if (fs.existsSync(legacyConfigPath)) {
-      try {
-        const fileContent = fs.readFileSync(legacyConfigPath, 'utf8');
-        config = yaml.load(fileContent);
-      } catch (e) {
-        console.error(`Error loading configuration from ${legacyConfigPath}:`, e);
-      }
-    } else {
-      console.error('No configuration found. Please create a configuration file.');
-      process.exit(1);
-    }
+    console.error('[ERROR] 未找到可用配置：缺少 config/user/ 或 config/_default/。');
+    console.error('[ERROR] 本版本已不再支持旧版单文件配置（config.yml / config.yaml）。');
+    console.error('[ERROR] 解决方法：使用模块化配置目录（建议从 config/_default/ 复制到 config/user/ 再修改）。');
+    process.exit(1);
   }
 
   // 确保配置有默认值并通过验证
@@ -689,8 +997,10 @@ function generatePageContent(pageId, data) {
         console.error(`Missing data for page: ${pageId}`);
         return `
                 <div class="welcome-section">
-                    <h2>页面未配置</h2>
-                    <p class="subtitle">请配置 ${pageId} 页面</p>
+                    <div class="welcome-section-main">
+                        <h2>页面未配置</h2>
+                        <p class="subtitle">请配置 ${pageId} 页面</p>
+                    </div>
                 </div>`;
     }
 
@@ -700,8 +1010,10 @@ function generatePageContent(pageId, data) {
 
         return `
                 <div class="welcome-section">
-                    <h2>${escapeHtml(profile.title || '欢迎使用')}</h2>
-                    <h3>${escapeHtml(profile.subtitle || '个人导航站')}</h3>
+                    <div class="welcome-section-main">
+                        <h2>${escapeHtml(profile.title || '欢迎使用')}</h2>
+                        <h3>${escapeHtml(profile.subtitle || '个人导航站')}</h3>
+                    </div>
                 </div>
 ${generateCategories(data.categories)}`;
     } else {
@@ -712,8 +1024,10 @@ ${generateCategories(data.categories)}`;
 
         return `
                 <div class="welcome-section">
-                    <h2>${escapeHtml(title)}</h2>
-                    <p class="subtitle">${escapeHtml(subtitle)}</p>
+                    <div class="welcome-section-main">
+                        <h2>${escapeHtml(title)}</h2>
+                        <p class="subtitle">${escapeHtml(subtitle)}</p>
+                    </div>
                 </div>
                 ${generateCategories(categories)}`;
     }
@@ -742,8 +1056,10 @@ function generateSearchResultsPage(config) {
             <!-- 搜索结果页 -->
             <div class="page" id="search-results">
                 <div class="welcome-section">
-                    <h2>搜索结果</h2>
-                    <p class="subtitle">在所有页面中找到的匹配项</p>
+                    <div class="welcome-section-main">
+                        <h2>搜索结果</h2>
+                        <p class="subtitle">在所有页面中找到的匹配项</p>
+                    </div>
                 </div>
 ${searchSections}
             </div>`;
@@ -784,6 +1100,40 @@ function generateFontVariables(config) {
     return css;
 }
 
+function normalizeGithubHeatmapColor(input) {
+  const raw = String(input || '').trim().replace(/^#/, '');
+  const color = raw.toLowerCase();
+  if (/^[0-9a-f]{6}$/.test(color)) return color;
+  if (/^[0-9a-f]{3}$/.test(color)) return color;
+  return '339af0';
+}
+
+function getGithubUsernameFromConfig(config) {
+  const username = config && config.site && config.site.github && config.site.github.username
+    ? String(config.site.github.username).trim()
+    : '';
+  return username;
+}
+
+function buildProjectsMeta(config) {
+  const username = getGithubUsernameFromConfig(config);
+  if (!username) return null;
+
+  const color = normalizeGithubHeatmapColor(
+    config && config.site && config.site.github && config.site.github.heatmapColor
+      ? config.site.github.heatmapColor
+      : '339af0'
+  );
+
+  return {
+    heatmap: {
+      username,
+      profileUrl: `https://github.com/${username}`,
+      imageUrl: `https://ghchart.rshah.org/${color}/${username}`
+    }
+  };
+}
+
 /**
  * 渲染单个页面
  * @param {string} pageId 页面ID
@@ -793,7 +1143,7 @@ function generateFontVariables(config) {
 function renderPage(pageId, config) {
   // 准备页面数据
   const data = {
-    ...config,
+    ...(config || {}),
     currentPage: pageId,
     pageId // 同时保留pageId字段，用于通用模板
   };
@@ -833,6 +1183,74 @@ function renderPage(pageId, config) {
     Object.assign(data, config[pageId]);
   }
 
+  // 页面配置缺失时也尽量给出可用的默认值，避免渲染空标题/undefined
+  if (data.title === undefined) {
+    const navItem = Array.isArray(config.navigation) ? config.navigation.find(nav => nav.id === pageId) : null;
+    if (navItem && navItem.name !== undefined) data.title = navItem.name;
+  }
+  if (data.subtitle === undefined) data.subtitle = '';
+  if (!Array.isArray(data.categories)) data.categories = [];
+
+  // 检查页面配置中是否指定了模板（用于派生字段与渲染）
+  const explicitTemplate = typeof data.template === 'string' ? data.template.trim() : '';
+  let templateName = explicitTemplate || pageId;
+  // 未显式指定模板时：若 pages/<pageId>.hbs 不存在，则默认使用通用 page 模板（避免依赖回退日志）
+  if (!explicitTemplate) {
+    const inferredTemplatePath = path.join(process.cwd(), 'templates', 'pages', `${templateName}.hbs`);
+    if (!fs.existsSync(inferredTemplatePath)) {
+      templateName = 'page';
+    }
+  }
+
+  // 页面级卡片风格开关（用于差异化）
+  if (templateName === 'projects') {
+    data.siteCardStyle = 'repo';
+    data.projectsMeta = buildProjectsMeta(config);
+    if (Array.isArray(data.categories)) {
+      const repoCache = tryLoadProjectsRepoCache(pageId, config);
+      if (repoCache && repoCache.map) {
+        applyRepoMetaToCategories(data.categories, repoCache.map);
+      }
+    }
+  }
+
+  // friends/articles：允许顶层 sites（历史/兼容），自动转换为一个分类容器以保持页面结构一致
+  // 注意：模板名可能被统一为 page（例如 friends/home 取消专属模板后），因此这里同时按 pageId 判断。
+  const isFriendsPage = pageId === 'friends' || templateName === 'friends';
+  const isArticlesPage = pageId === 'articles' || templateName === 'articles';
+  if ((isFriendsPage || isArticlesPage)
+    && (!Array.isArray(data.categories) || data.categories.length === 0)
+    && Array.isArray(data.sites)
+    && data.sites.length > 0) {
+    const implicitName = isFriendsPage ? '全部友链' : '全部来源';
+    data.categories = [
+      {
+        name: implicitName,
+        icon: 'fas fa-link',
+        sites: data.sites
+      }
+    ];
+  }
+
+  // articles 模板页面：Phase 2 若存在 RSS 缓存，则注入 articlesItems（缓存缺失/损坏则回退 Phase 1）
+  if (templateName === 'articles') {
+    const cache = tryLoadArticlesFeedCache(pageId, config);
+    data.articlesItems = cache && Array.isArray(cache.items) ? cache.items : [];
+    data.articlesMeta = cache ? cache.meta : null;
+    // Phase 2：按页面配置分类聚合展示（用于模板渲染只读文章列表）
+    data.articlesCategories = data.articlesItems.length
+      ? buildArticlesCategoriesByPageCategories(data.categories, data.articlesItems)
+      : [];
+  }
+
+  // bookmarks 模板页面：注入配置文件“内容更新时间”（优先 git，回退 mtime）
+  if (templateName === 'bookmarks') {
+    const updatedAtMeta = getPageConfigUpdatedAtMeta(pageId);
+    if (updatedAtMeta) {
+      data.pageMeta = { ...updatedAtMeta };
+    }
+  }
+
   // 首页标题规则：使用 site.yml 的 profile 覆盖首页（导航第一项）的 title/subtitle 显示
   const homePageId = config.homePageId
     || (Array.isArray(config.navigation) && config.navigation[0] ? config.navigation[0].id : null)
@@ -844,10 +1262,7 @@ function renderPage(pageId, config) {
     if (config.profile.subtitle !== undefined) data.subtitle = config.profile.subtitle;
   }
 
-  // 检查页面配置中是否指定了模板
-  let templateName = pageId;
   if (config[pageId] && config[pageId].template) {
-    templateName = config[pageId].template;
     console.log(`页面 ${pageId} 使用指定模板: ${templateName}`);
   }
 

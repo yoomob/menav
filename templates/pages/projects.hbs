@@ -1,14 +1,8 @@
-{{#ifEquals pageId @root.homePageId}}
-<div class="welcome-section">
-    <h2 data-editable="profile-title">{{title}}</h2>
-    <h3 data-editable="profile-subtitle">{{subtitle}}</h3>
+{{!-- projects.hbs - 项目页：风格 A（代码仓库风），标题栏右侧展示 GitHub 热力图（可选） --}}
+<div class="page-template page-template-projects">
+    {{> page-header}}
+
+    {{#each categories}}
+        {{> category}}
+    {{/each}}
 </div>
-{{else}}
-<div class="welcome-section">
-    <h2 data-editable="page-title">{{title}}</h2>
-    <p class="subtitle" data-editable="page-subtitle">{{subtitle}}</p>
-</div>
-{{/ifEquals}}
-{{#each categories}}
-    {{> category}}
-{{/each}} 

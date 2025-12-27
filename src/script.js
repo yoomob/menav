@@ -235,9 +235,31 @@ window.MeNav = {
             const sitesGrid = parent.querySelector('[data-container="sites"]');
             if (!sitesGrid) return null;
 
+            // 站点卡片样式：根据“页面模板”决定（friends/articles/projects 等）
+            let siteCardStyle = '';
+            try {
+                const pageEl = parent.closest('.page');
+                const pageId = pageEl && pageEl.id ? String(pageEl.id) : '';
+                let templateName = pageId;
+
+                const cfg =
+                    window.MeNav && typeof window.MeNav.getConfig === 'function'
+                        ? window.MeNav.getConfig()
+                        : null;
+                const pageConfig = cfg && cfg.data && pageId ? cfg.data[pageId] : null;
+                if (pageConfig && pageConfig.template) {
+                    templateName = String(pageConfig.template);
+                }
+
+                // projects 模板使用代码仓库风格卡片（与生成端 templates/components/site-card.hbs 保持一致）
+                if (templateName === 'projects') siteCardStyle = 'repo';
+            } catch (e) {
+                siteCardStyle = '';
+            }
+
             // 创建新的站点卡片
             const newSite = document.createElement('a');
-            newSite.className = 'site-card';
+            newSite.className = siteCardStyle ? `site-card site-card-${siteCardStyle}` : 'site-card';
 
             const siteName = data.name || '未命名站点';
             const siteUrl = data.url || '#';
@@ -246,6 +268,10 @@ window.MeNav = {
 
             newSite.href = siteUrl;
             newSite.title = siteName + (siteDescription ? ' - ' + siteDescription : '');
+            if (/^https?:\/\//i.test(siteUrl)) {
+                newSite.target = '_blank';
+                newSite.rel = 'noopener';
+            }
             
             // 设置数据属性
             newSite.setAttribute('data-type', 'site');
@@ -254,76 +280,163 @@ window.MeNav = {
             newSite.setAttribute('data-icon', siteIcon);
             newSite.setAttribute('data-description', siteDescription);
 
-            // 添加内容（根据图标模式渲染，避免 innerHTML 注入）
-            const iconWrapper = document.createElement('div');
-            iconWrapper.className = 'site-card-icon';
-            iconWrapper.setAttribute('aria-hidden', 'true');
+            // projects repo 风格：与模板中的 repo 结构保持一致（不走 favicon 逻辑）
+            if (siteCardStyle === 'repo') {
+                const repoHeader = document.createElement('div');
+                repoHeader.className = 'repo-header';
 
-            const contentWrapper = document.createElement('div');
-            contentWrapper.className = 'site-card-content';
+                const repoIcon = document.createElement('i');
+                repoIcon.className = `${siteIcon || 'fas fa-code'} repo-icon`;
+                repoIcon.setAttribute('aria-hidden', 'true');
 
-            const titleEl = document.createElement('h3');
-            titleEl.textContent = siteName;
+                const repoTitle = document.createElement('div');
+                repoTitle.className = 'repo-title';
+                repoTitle.textContent = siteName;
 
-            const descEl = document.createElement('p');
-            descEl.textContent = siteDescription;
+                repoHeader.appendChild(repoIcon);
+                repoHeader.appendChild(repoTitle);
 
-            contentWrapper.appendChild(titleEl);
-            contentWrapper.appendChild(descEl);
+                const repoDesc = document.createElement('div');
+                repoDesc.className = 'repo-desc';
+                repoDesc.textContent = siteDescription;
 
-            let iconsMode = 'favicon';
-            try {
-                const cfg =
-                    window.MeNav && typeof window.MeNav.getConfig === 'function'
-                        ? window.MeNav.getConfig()
-                        : null;
-                iconsMode = (cfg && (cfg.data?.icons?.mode || cfg.icons?.mode)) || 'favicon';
-            } catch (e) {
-                iconsMode = 'favicon';
-            }
+                newSite.appendChild(repoHeader);
+                newSite.appendChild(repoDesc);
 
-            if (iconsMode === 'favicon' && data.url && /^https?:\/\//i.test(data.url)) {
-                const faviconUrl = `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(data.url)}&size=32`;
+                const hasStats =
+                    data &&
+                    (data.language ||
+                        data.stars ||
+                        data.forks ||
+                        data.issues);
 
-                const iconContainer = document.createElement('div');
-                iconContainer.className = 'icon-container';
+                if (hasStats) {
+                    const repoStats = document.createElement('div');
+                    repoStats.className = 'repo-stats';
 
-                const placeholder = document.createElement('i');
-                placeholder.className = 'fas fa-circle-notch fa-spin icon-placeholder';
-                placeholder.setAttribute('aria-hidden', 'true');
+                    if (data.language) {
+                        const languageItem = document.createElement('div');
+                        languageItem.className = 'stat-item';
 
-                const fallback = document.createElement('i');
-                fallback.className = `${siteIcon} icon-fallback`;
-                fallback.setAttribute('aria-hidden', 'true');
+                        const langDot = document.createElement('span');
+                        langDot.className = 'lang-dot';
+                        langDot.style.backgroundColor = data.languageColor || '#909296';
 
-                const favicon = document.createElement('img');
-                favicon.className = 'favicon-icon';
-                favicon.src = faviconUrl;
-                favicon.alt = `${siteName} favicon`;
-                favicon.loading = 'lazy';
-                favicon.addEventListener('load', () => {
-                    favicon.classList.add('loaded');
-                    placeholder.classList.add('hidden');
-                });
-                favicon.addEventListener('error', () => {
-                    favicon.classList.add('error');
-                    placeholder.classList.add('hidden');
-                    fallback.classList.add('visible');
-                });
+                        languageItem.appendChild(langDot);
+                        languageItem.appendChild(document.createTextNode(String(data.language)));
+                        repoStats.appendChild(languageItem);
+                    }
 
-                iconContainer.appendChild(placeholder);
-                iconContainer.appendChild(favicon);
-                iconContainer.appendChild(fallback);
-                iconWrapper.appendChild(iconContainer);
+                    if (data.stars) {
+                        const starsItem = document.createElement('div');
+                        starsItem.className = 'stat-item';
+
+                        const starIcon = document.createElement('i');
+                        starIcon.className = 'far fa-star';
+                        starIcon.setAttribute('aria-hidden', 'true');
+                        starsItem.appendChild(starIcon);
+                        starsItem.appendChild(document.createTextNode(` ${data.stars}`));
+                        repoStats.appendChild(starsItem);
+                    }
+
+                    if (data.forks) {
+                        const forksItem = document.createElement('div');
+                        forksItem.className = 'stat-item';
+
+                        const forkIcon = document.createElement('i');
+                        forkIcon.className = 'fas fa-code-branch';
+                        forkIcon.setAttribute('aria-hidden', 'true');
+                        forksItem.appendChild(forkIcon);
+                        forksItem.appendChild(document.createTextNode(` ${data.forks}`));
+                        repoStats.appendChild(forksItem);
+                    }
+
+                    if (data.issues) {
+                        const issuesItem = document.createElement('div');
+                        issuesItem.className = 'stat-item';
+
+                        const issueIcon = document.createElement('i');
+                        issueIcon.className = 'fas fa-exclamation-circle';
+                        issueIcon.setAttribute('aria-hidden', 'true');
+                        issuesItem.appendChild(issueIcon);
+                        issuesItem.appendChild(document.createTextNode(` ${data.issues}`));
+                        repoStats.appendChild(issuesItem);
+                    }
+
+                    newSite.appendChild(repoStats);
+                }
             } else {
-                const iconEl = document.createElement('i');
-                iconEl.className = `${siteIcon} site-icon`;
-                iconEl.setAttribute('aria-hidden', 'true');
-                iconWrapper.appendChild(iconEl);
-            }
+                // 添加内容（根据图标模式渲染，避免 innerHTML 注入）
+                const iconWrapper = document.createElement('div');
+                iconWrapper.className = 'site-card-icon';
+                iconWrapper.setAttribute('aria-hidden', 'true');
 
-            newSite.appendChild(iconWrapper);
-            newSite.appendChild(contentWrapper);
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'site-card-content';
+
+                const titleEl = document.createElement('h3');
+                titleEl.textContent = siteName;
+
+                const descEl = document.createElement('p');
+                descEl.textContent = siteDescription;
+
+                contentWrapper.appendChild(titleEl);
+                contentWrapper.appendChild(descEl);
+
+                let iconsMode = 'favicon';
+                try {
+                    const cfg =
+                        window.MeNav && typeof window.MeNav.getConfig === 'function'
+                            ? window.MeNav.getConfig()
+                            : null;
+                    iconsMode = (cfg && (cfg.data?.icons?.mode || cfg.icons?.mode)) || 'favicon';
+                } catch (e) {
+                    iconsMode = 'favicon';
+                }
+
+                if (iconsMode === 'favicon' && data.url && /^https?:\/\//i.test(data.url)) {
+                    const faviconUrl = `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(data.url)}&size=32`;
+
+                    const iconContainer = document.createElement('div');
+                    iconContainer.className = 'icon-container';
+
+                    const placeholder = document.createElement('i');
+                    placeholder.className = 'fas fa-circle-notch fa-spin icon-placeholder';
+                    placeholder.setAttribute('aria-hidden', 'true');
+
+                    const fallback = document.createElement('i');
+                    fallback.className = `${siteIcon} icon-fallback`;
+                    fallback.setAttribute('aria-hidden', 'true');
+
+                    const favicon = document.createElement('img');
+                    favicon.className = 'favicon-icon';
+                    favicon.src = faviconUrl;
+                    favicon.alt = `${siteName} favicon`;
+                    favicon.loading = 'lazy';
+                    favicon.addEventListener('load', () => {
+                        favicon.classList.add('loaded');
+                        placeholder.classList.add('hidden');
+                    });
+                    favicon.addEventListener('error', () => {
+                        favicon.classList.add('error');
+                        placeholder.classList.add('hidden');
+                        fallback.classList.add('visible');
+                    });
+
+                    iconContainer.appendChild(placeholder);
+                    iconContainer.appendChild(favicon);
+                    iconContainer.appendChild(fallback);
+                    iconWrapper.appendChild(iconContainer);
+                } else {
+                    const iconEl = document.createElement('i');
+                    iconEl.className = `${siteIcon} site-icon`;
+                    iconEl.setAttribute('aria-hidden', 'true');
+                    iconWrapper.appendChild(iconEl);
+                }
+
+                newSite.appendChild(iconWrapper);
+                newSite.appendChild(contentWrapper);
+            }
 
             // 添加到DOM
             sitesGrid.appendChild(newSite);
@@ -703,7 +816,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isLightTheme = false; // 主题状态
     let isSidebarCollapsed = false; // 侧边栏折叠状态
     let pages; // 页面元素的全局引用
-    let currentSearchEngine = 'local'; // 当前选择的搜索引擎
+	    let currentSearchEngine = 'local'; // 当前选择的搜索引擎
 
     // 搜索索引，用于提高搜索效率
     let searchIndex = {
@@ -711,8 +824,8 @@ document.addEventListener('DOMContentLoaded', () => {
         items: []
     };
 
-    // 搜索引擎配置
-    const searchEngines = {
+	    // 搜索引擎配置
+	    const searchEngines = {
         local: {
             name: '本地搜索',
             icon: 'fas fa-search',
@@ -733,7 +846,8 @@ document.addEventListener('DOMContentLoaded', () => {
             icon: 'fas fa-paw',
             url: 'https://www.baidu.com/s?wd='
         }
-    };
+	    };
+
 
     // 获取DOM元素 - 基本元素
     const searchInput = document.getElementById('search');
@@ -879,8 +993,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 page.querySelectorAll('.site-card').forEach(card => {
                     try {
-                        const title = card.querySelector('h3')?.textContent?.toLowerCase() || '';
-                        const description = card.querySelector('p')?.textContent?.toLowerCase() || '';
+                        // 排除“扩展写回影子结构”等不应参与搜索的卡片
+                        if (card.closest('[data-search-exclude="true"]')) return;
+
+                        // 兼容不同页面/卡片样式：优先取可见文本，其次回退到 data-*（确保 projects repo 卡片也能被搜索）
+                        const dataTitle = card.dataset?.name || card.getAttribute('data-name') || '';
+                        const dataDescription = card.dataset?.description || card.getAttribute('data-description') || '';
+
+                        const titleText =
+                            card.querySelector('h3')?.textContent ||
+                            card.querySelector('.repo-title')?.textContent ||
+                            dataTitle;
+                        const descriptionText =
+                            card.querySelector('p')?.textContent ||
+                            card.querySelector('.repo-desc')?.textContent ||
+                            dataDescription;
+
+                        const title = String(titleText || '').toLowerCase();
+                        const description = String(descriptionText || '').toLowerCase();
                         const url = card.href || card.getAttribute('href') || '#';
                         const icon = card.querySelector('i.icon-fallback')?.className || card.querySelector('i')?.className || '';
 
@@ -1154,114 +1284,84 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!card || !searchTerm) return;
 
         try {
-            const title = card.querySelector('h3');
-            const description = card.querySelector('p');
+            // 兼容 projects repo 卡片：title/desc 不一定是 h3/p
+            const titleElement = card.querySelector('h3') || card.querySelector('.repo-title');
+            const descriptionElement = card.querySelector('p') || card.querySelector('.repo-desc');
 
-            if (!title || !description) return;
+            const hasPinyinMatch = typeof PinyinMatch !== 'undefined' && PinyinMatch && typeof PinyinMatch.match === 'function';
 
-            // 安全地高亮标题中的匹配文本
-            if (title.textContent.toLowerCase().includes(searchTerm)) {
-                const titleText = title.textContent;
-                const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi');
+            const applyRangeHighlight = (element, start, end) => {
+                const text = element.textContent || '';
+                const safeStart = Math.max(0, Math.min(text.length, start));
+                const safeEnd = Math.max(safeStart, Math.min(text.length - 1, end));
 
-                // 创建安全的DOM结构而不是直接使用innerHTML
-                const titleFragment = document.createDocumentFragment();
-                let lastIndex = 0;
-                let match;
+                const fragment = document.createDocumentFragment();
+                fragment.appendChild(document.createTextNode(text.slice(0, safeStart)));
 
-                // 使用正则表达式查找所有匹配项
-                const titleRegex = new RegExp(regex);
-                while ((match = titleRegex.exec(titleText)) !== null) {
-                    // 添加匹配前的文本
-                    if (match.index > lastIndex) {
-                        titleFragment.appendChild(document.createTextNode(
-                            titleText.substring(lastIndex, match.index)
-                        ));
+                const span = document.createElement('span');
+                span.className = 'highlight';
+                span.textContent = text.slice(safeStart, safeEnd + 1);
+                fragment.appendChild(span);
+
+                fragment.appendChild(document.createTextNode(text.slice(safeEnd + 1)));
+
+                while (element.firstChild) {
+                    element.removeChild(element.firstChild);
+                }
+                element.appendChild(fragment);
+            };
+
+            const highlightInElement = element => {
+                if (!element) return;
+
+                const rawText = element.textContent || '';
+                const lowerText = rawText.toLowerCase();
+                if (!rawText) return;
+
+                if (lowerText.includes(searchTerm)) {
+                    const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi');
+                    const fragment = document.createDocumentFragment();
+                    let lastIndex = 0;
+                    let match;
+
+                    while ((match = regex.exec(rawText)) !== null) {
+                        if (match.index > lastIndex) {
+                            fragment.appendChild(document.createTextNode(rawText.substring(lastIndex, match.index)));
+                        }
+
+                        const span = document.createElement('span');
+                        span.className = 'highlight';
+                        span.textContent = match[0];
+                        fragment.appendChild(span);
+
+                        lastIndex = match.index + match[0].length;
+
+                        // 防止无限循环
+                        if (regex.lastIndex === 0) break;
                     }
 
-                    // 添加高亮的匹配文本
-                    const span = document.createElement('span');
-                    span.className = 'highlight';
-                    span.textContent = match[0];
-                    titleFragment.appendChild(span);
-
-                    lastIndex = match.index + match[0].length;
-
-                    // 防止无限循环
-                    if (titleRegex.lastIndex === 0) break;
-                }
-
-                // 添加剩余文本
-                if (lastIndex < titleText.length) {
-                    titleFragment.appendChild(document.createTextNode(
-                        titleText.substring(lastIndex)
-                    ));
-                }
-
-                // 清空原标题并添加新内容
-                while (title.firstChild) {
-                    title.removeChild(title.firstChild);
-                }
-                title.appendChild(titleFragment);
-            } else if (PinyinMatch.match(title.textContent, searchTerm)) {
-                const arr = PinyinMatch.match(title.textContent, searchTerm);
-                const [start, end] = arr;
-                title.innerHTML = title.textContent.slice(0, start) +
-                    `<span class="highlight">${title.textContent.slice(start, end + 1)}</span>` +
-                    title.textContent.slice(end + 1);
-            }
-
-            // 安全地高亮描述中的匹配文本
-            if (description.textContent.toLowerCase().includes(searchTerm)) {
-                const descText = description.textContent;
-                const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi');
-
-                // 创建安全的DOM结构而不是直接使用innerHTML
-                const descFragment = document.createDocumentFragment();
-                let lastIndex = 0;
-                let match;
-
-                // 使用正则表达式查找所有匹配项
-                const descRegex = new RegExp(regex);
-                while ((match = descRegex.exec(descText)) !== null) {
-                    // 添加匹配前的文本
-                    if (match.index > lastIndex) {
-                        descFragment.appendChild(document.createTextNode(
-                            descText.substring(lastIndex, match.index)
-                        ));
+                    if (lastIndex < rawText.length) {
+                        fragment.appendChild(document.createTextNode(rawText.substring(lastIndex)));
                     }
 
-                    // 添加高亮的匹配文本
-                    const span = document.createElement('span');
-                    span.className = 'highlight';
-                    span.textContent = match[0];
-                    descFragment.appendChild(span);
-
-                    lastIndex = match.index + match[0].length;
-
-                    // 防止无限循环
-                    if (descRegex.lastIndex === 0) break;
+                    while (element.firstChild) {
+                        element.removeChild(element.firstChild);
+                    }
+                    element.appendChild(fragment);
+                    return;
                 }
 
-                // 添加剩余文本
-                if (lastIndex < descText.length) {
-                    descFragment.appendChild(document.createTextNode(
-                        descText.substring(lastIndex)
-                    ));
+                if (hasPinyinMatch) {
+                    const arr = PinyinMatch.match(rawText, searchTerm);
+                    if (Array.isArray(arr) && arr.length >= 2) {
+                        const [start, end] = arr;
+                        applyRangeHighlight(element, start, end);
+                    }
                 }
+            };
 
-                // 清空原描述并添加新内容
-                while (description.firstChild) {
-                    description.removeChild(description.firstChild);
-                }
-                description.appendChild(descFragment);
-            } else if (PinyinMatch.match(description.textContent, searchTerm)) {
-                const arr = PinyinMatch.match(description.textContent, searchTerm);
-                const [start, end] = arr;
-                description.innerHTML = description.textContent.slice(0, start) +
-                    `<span class="highlight">${description.textContent.slice(start, end + 1)}</span>` +
-                    description.textContent.slice(end + 1);
-            }
+            highlightInElement(titleElement);
+            highlightInElement(descriptionElement);
         } catch (error) {
             console.error('Error highlighting search term');
         }
@@ -1688,11 +1788,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // 初始化嵌套分类功能
-        initializeNestedCategories();
-        
-        // 初始化分类切换按钮
-        const categoryToggleBtn = document.getElementById('category-toggle');
+	        // 初始化嵌套分类功能
+	        initializeNestedCategories();
+	        
+	        // 初始化分类切换按钮
+	        const categoryToggleBtn = document.getElementById('category-toggle');
         if (categoryToggleBtn) {
             categoryToggleBtn.addEventListener('click', function() {
                 window.MeNav.toggleCategories();
