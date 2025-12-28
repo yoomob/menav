@@ -45,6 +45,36 @@
 <details>
 <summary>点击查看/隐藏更新日志</summary>
 
+### 2025/12/27
+
+细节见：[`config/update-instructions-20251227.md`](config/update-instructions-20251227.md)
+
+**1. 页面模板差异化改进（Phase 1/Phase 2）**
+- 首页判定规则调整：`site.yml -> navigation` 第一项即首页（不再依赖 `home` 页面/ID）
+- 模板体系整理：通用 `page` + 特殊页 `projects/articles/bookmarks` + 内置 `search-results`
+- `bookmarks` 标题后追加只读更新时间：`update: YYYY-MM-DD | from: git|mtime`
+- `articles` Phase 2：RSS 聚合文章条目（只读 `data-type="article"`），按 `articles.yml` 分类聚合展示；保留隐藏写回结构避免干扰扩展
+- `projects`：repo 风格卡片（language/stars/forks 自动抓取）+ 可选 GitHub 贡献热力图
+
+**2. 工作流与时效性数据刷新**
+- GitHub Actions 构建前自动执行 `sync-projects` / `sync-articles`
+- 新增 `schedule` 定时触发刷新（cron 使用 UTC，可在 workflow 中调整）
+
+**3. 配置与兼容清理（Breaking）**
+- 移除旧版单文件配置 `config.yml/config.yaml` 回退
+- 移除独立 `navigation.yml` 回退
+- 移除 `pages/home.yml -> 顶层 categories` 与 `home` 子菜单特例
+- `navigation[].active` 不再生效（首页/默认打开页始终由 `navigation` 第一项决定）
+
+**4. 配置变更（字段新增/减少）**
+- 新增：
+  - `site.rss.*`：articles RSS 抓取与缓存配置（用于 `npm run sync-articles`）
+  - `site.github.*`：projects 热力图与仓库元信息抓取缓存配置（用于 `npm run sync-projects`）
+  - `pages/<id>.yml -> template`：页面模板选择（缺省时按回退规则使用 `page`）
+- 说明：
+  - “首页”始终由 `site.yml -> navigation` 第一项决定，不要求页面 id 为 `home`
+
+
 ### 2025/12/23
 
 **1. 侧边栏与导航交互优化**
@@ -209,6 +239,7 @@ menav/
 
 ## 文档导航
 
+- 更新说明2025/12/27（兼容性移除 / 迁移指南）：[`config/update-instructions-20251227.md`](config/update-instructions-20251227.md)
 - 配置系统（完全替换策略、目录结构、示例）：[`config/README.md`](config/README.md)
 - 书签导入（格式要求、流程、常见问题）：[`bookmarks/README.md`](bookmarks/README.md)
 - 模板系统（组件、回退、数据流）：[`templates/README.md`](templates/README.md)
