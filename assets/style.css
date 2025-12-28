@@ -1653,9 +1653,9 @@ body .content.expanded {
     margin: 0;
 }
 
-/* articles：桌面端网格固定 4 列（避免 auto-fill 在大屏上过多列导致阅读密度过高） */
+/* articles：桌面端网格固定 3 列（避免 auto-fill 在大屏上过多列导致阅读密度过高） */
 .page-template-articles .sites-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 @media (max-width: 1024px) {
