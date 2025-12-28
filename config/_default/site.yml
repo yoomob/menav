@@ -15,21 +15,23 @@ icons:
   # 隐私提示：启用 favicon 模式会请求第三方服务以获取图标，可能将站点 URL 发送给服务商（详见 README“隐私说明”）。
   mode: favicon # 可选: favicon | manual（默认 favicon）
 
-# 字体设置（source: google | system；请确保字体支持相应字重）
+# 字体设置：全站基础字体
+# - source: css | google | system
+# - css: 通过 cssUrl 引入第三方字体 CSS
+# - google: 通过 Google Fonts 加载 family（weight 建议 100~900）
+# - system: 只使用本地/系统字体，不额外发起请求
 fonts:
-  title:
-    family: Poppins
-    weight: 600
-    source: google
-  subtitle:
-    family: Quicksand
-    weight: 500
-    source: google
-  body:
-    family: Noto Sans SC
-    weight: 400
-    source: google
-    
+  source: css
+  cssUrl: "https://fontsapi.zeoseven.com/292/main/result.css"
+  family: LXGW WenKai
+  weight: normal
+
+# 示例：切换到 Google Fonts
+# fonts:
+#   source: google
+#   family: "Noto Sans SC"
+#   weight: 400
+
 # 个人资料：显示在首页顶部的欢迎信息
 profile:
   # 注意：首页（导航第一项）标题区优先使用 profile.title/profile.subtitle

@@ -291,23 +291,13 @@ function ensureConfigDefaults(config) {
   // 确保基本结构存在
   result.site = result.site || {};
   result.navigation = result.navigation || [];
-  result.fonts = result.fonts || {};
 
-  // 确保字体配置完整
-  result.fonts.title = result.fonts.title || {};
-  result.fonts.title.family = result.fonts.title.family || 'Arial';
-  result.fonts.title.weight = result.fonts.title.weight || 700;
-  result.fonts.title.source = result.fonts.title.source || 'system';
-
-  result.fonts.subtitle = result.fonts.subtitle || {};
-  result.fonts.subtitle.family = result.fonts.subtitle.family || 'Arial';
-  result.fonts.subtitle.weight = result.fonts.subtitle.weight || 500;
-  result.fonts.subtitle.source = result.fonts.subtitle.source || 'system';
-
-  result.fonts.body = result.fonts.body || {};
-  result.fonts.body.family = result.fonts.body.family || 'Arial';
-  result.fonts.body.weight = result.fonts.body.weight || 400;
-  result.fonts.body.source = result.fonts.body.source || 'system';
+  // 字体默认值（单一字体配置）
+  result.fonts = result.fonts && typeof result.fonts === 'object' ? result.fonts : {};
+  result.fonts.source = result.fonts.source || 'css';
+  result.fonts.family = result.fonts.family || 'LXGW WenKai';
+  result.fonts.weight = result.fonts.weight || 'normal';
+  result.fonts.cssUrl = result.fonts.cssUrl || 'https://fontsapi.zeoseven.com/292/main/result.css';
 
   result.profile = result.profile || {};
   result.social = result.social || [];
@@ -1065,39 +1055,130 @@ ${searchSections}
             </div>`;
 }
 
-// 生成Google Fonts链接
-function generateGoogleFontsLink(config) {
-    const fonts = config.fonts;
-    const googleFonts = [];
+/**
+ * 将 CSS 文本安全嵌入到 <style> 中，避免出现 `</style>` 结束标签导致样式块被提前终止。
+ * @param {string} cssText CSS 文本
+ * @returns {string} 安全的 CSS 文本
+ */
+function makeCssSafeForHtmlStyleTag(cssText) {
+  if (typeof cssText !== 'string') {
+    return '';
+  }
 
-    // 收集需要加载的Google字体
-    Object.values(fonts).forEach(font => {
-        if (font.source === 'google') {
-            const fontName = font.family.replace(/["']/g, '');
-            const fontWeight = font.weight || 400;
-            googleFonts.push(`family=${fontName}:wght@${fontWeight}`);
-        }
-    });
-
-    return googleFonts.length > 0
-        ? `<link href="https://fonts.googleapis.com/css2?${googleFonts.join('&')}&display=swap" rel="stylesheet">`
-        : '';
+  return cssText.replace(/<\/style/gi, '<\\/style');
 }
 
-// 生成字体CSS变量
-function generateFontVariables(config) {
-    const fonts = config.fonts;
-    let css = ':root {\n';
+function normalizeFontWeight(input) {
+  if (input === undefined || input === null) return 'normal';
 
-    Object.entries(fonts).forEach(([key, font]) => {
-        css += `    --font-${key}: ${font.family};\n`;
-        if (font.weight) {
-            css += `    --font-weight-${key}: ${font.weight};\n`;
-        }
-    });
+  if (typeof input === 'number' && Number.isFinite(input)) {
+    return String(input);
+  }
 
-    css += '}';
-    return css;
+  const raw = String(input).trim();
+  if (!raw) return 'normal';
+
+  if (/^(normal|bold|bolder|lighter)$/i.test(raw)) return raw.toLowerCase();
+  if (/^[1-9]00$/.test(raw)) return raw;
+
+  return raw;
+}
+
+function normalizeFontFamilyForCss(input) {
+  const raw = String(input || '').trim();
+  if (!raw) return '';
+
+  const generics = new Set([
+    'serif',
+    'sans-serif',
+    'monospace',
+    'cursive',
+    'fantasy',
+    'system-ui',
+    'ui-serif',
+    'ui-sans-serif',
+    'ui-monospace',
+    'ui-rounded',
+    'emoji',
+    'math',
+    'fangsong',
+  ]);
+
+  return raw
+    .split(',')
+    .map(part => part.trim())
+    .filter(Boolean)
+    .map(part => {
+      const unquoted = part.replace(/^['"]|['"]$/g, '').trim();
+      if (!unquoted) return '';
+      if (generics.has(unquoted)) return unquoted;
+
+      const needsQuotes = /\s/.test(unquoted);
+      if (!needsQuotes) return unquoted;
+
+      return `"${unquoted.replace(/"/g, '\\"')}"`;
+    })
+    .filter(Boolean)
+    .join(', ');
+}
+
+function normalizeFontSource(input) {
+  const raw = String(input || '').trim().toLowerCase();
+  if (raw === 'css' || raw === 'google' || raw === 'system') return raw;
+  return 'system';
+}
+
+function getNormalizedFontsConfig(config) {
+  const fonts =
+    config && config.fonts && typeof config.fonts === 'object' ? config.fonts : {};
+
+  return {
+    source: normalizeFontSource(fonts.source),
+    family: normalizeFontFamilyForCss(fonts.family),
+    weight: normalizeFontWeight(fonts.weight),
+    cssUrl: String(fonts.cssUrl || fonts.href || '').trim(),
+  };
+}
+
+// 生成字体相关 <link>（包含固定的首页特殊样式字体）
+function generateFontLinks(config) {
+  const fonts = getNormalizedFontsConfig(config);
+  const links = [];
+
+  // 首页特殊样式字体：固定为 Quicksand（不通过配置控制）
+  links.push('<link rel="preconnect" href="https://fonts.googleapis.com">');
+  links.push('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>');
+  links.push(
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500&display=swap">'
+  );
+
+  // 全站基础字体：按配置加载
+  if (fonts.source === 'css' && fonts.cssUrl) {
+    links.push(
+      `<link rel="stylesheet" href="${escapeHtml(fonts.cssUrl)}">`
+    );
+  }
+
+  if (fonts.source === 'google' && fonts.family) {
+    const familyNoQuotes = fonts.family.replace(/["']/g, '').split(',')[0].trim();
+    const weight = /^[1-9]00$/.test(fonts.weight) ? fonts.weight : '400';
+    const familyParam = encodeURIComponent(familyNoQuotes).replace(/%20/g, '+');
+    links.push(
+      `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${familyParam}:wght@${weight}&display=swap">`
+    );
+  }
+
+  return links.join('\n');
+}
+
+// 生成字体 CSS 变量（单一字体配置）
+function generateFontCss(config) {
+  const fonts = getNormalizedFontsConfig(config);
+  const family = fonts.family || 'system-ui, sans-serif';
+  const weight = fonts.weight || 'normal';
+
+  const css = `:root {\n  --font-body: ${family};\n  --font-weight-body: ${weight};\n}\n`;
+  return makeCssSafeForHtmlStyleTag(css);
 }
 
 function normalizeGithubHeatmapColor(input) {
@@ -1322,11 +1403,9 @@ function generateHTML(config) {
     return navItem;
   });
 
-  // 准备Google Fonts链接
-  const googleFontsLink = generateGoogleFontsLink(config);
-
-  // 准备CSS字体变量
-  const fontVariables = generateFontVariables(config);
+  // 准备字体链接与 CSS 变量
+  const fontLinks = generateFontLinks(config);
+  const fontCss = generateFontCss(config);
 
   // 准备社交链接
   const socialLinks = generateSocialLinks(config.social);
@@ -1335,8 +1414,8 @@ function generateHTML(config) {
   const layoutData = {
     ...config,
     pages,
-    googleFontsLink,
-    fontVariables,
+    fontLinks,
+    fontCss,
     navigationData,
     currentYear,
     socialLinks,

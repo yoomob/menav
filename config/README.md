@@ -108,9 +108,9 @@ MeNav 配置系统采用“完全替换”策略（不合并），按以下优�
    - `manual`：完全使用手动 Font Awesome 图标，不发起外部请求（适合内网/离线/隐私敏感场景）
 
 3. **字体**
-   - `fonts.*.source: google | system`
-   - `system`：使用系统字体，加载更快；`google`：可选字体更多但可能受网络影响
-   - 中文站点建议选择支持中文与字重的字体（如 `Noto Sans SC`）；请确保所选字体包含配置的字重，否则可能显示异常
+   - `fonts`：单一字体配置项，用于设置全站基础字体（`body` 等）
+   - 支持 `source: css | google | system`（分别表示第三方 CSS、Google Fonts、系统字体）
+   - 首页副标题（渐变发光样式）字体固定为 `Quicksand`，不通过配置项控制
 
 4. **顶部欢迎信息与社交链接**
    - `profile`：首页顶部欢迎信息
@@ -238,21 +238,14 @@ profile:
   title: "个人导航站"
   subtitle: "我收藏的精选网站"
 
-# 字体配置
+# 字体：全站基础字体
 fonts:
-  title:
-    family: Roboto
-    weight: 600
-    source: google
-  subtitle:
-    family: Noto Sans SC
-    weight: 500
-    source: google
-  body:
-    family: Noto Sans SC
-    weight: 400
-    source: google
-  
+  source: css
+  cssUrl: "https://fontsapi.zeoseven.com/292/main/result.css"
+  family: "LXGW WenKai"
+  weight: normal
+
+	  
 # 社交媒体链接
 social:
   - name: "GitHub"
