@@ -6,24 +6,26 @@
          data-level="{{#if level}}{{level}}{{else}}1{{/if}}"
          data-container="categories">
     
-    <div class="category-header"{{#if level}}{{#ifCond level '===' 2}} data-toggle="category"{{/ifCond}}{{else}}{{#unless subcategories}}{{#unless groups}} data-toggle="category"{{/unless}}{{/unless}}{{/if}}>
+    <div class="category-header"{{#if subcategories}} data-toggle="category"{{else}}{{#if groups}} data-toggle="category"{{else}}{{#if sites}} data-toggle="category"{{/if}}{{/if}}{{/if}}>
         <h{{#if level}}{{add level 1}}{{else}}2{{/if}} data-editable="category-name">
             <i class="{{icon}}"></i>
             {{name}}
-            {{#if level}}
-                {{#ifCond level '===' 2}}
-                    <span class="toggle-icon">
-                        <i class="fas fa-chevron-down"></i>
-                    </span>
-                {{/ifCond}}
+            {{#if subcategories}}
+                <span class="toggle-icon">
+                    <i class="fas fa-chevron-down"></i>
+                </span>
             {{else}}
-                {{#unless subcategories}}
-                {{#unless groups}}
+                {{#if groups}}
                     <span class="toggle-icon">
                         <i class="fas fa-chevron-down"></i>
                     </span>
-                {{/unless}}
-                {{/unless}}
+                {{else}}
+                    {{#if sites}}
+                        <span class="toggle-icon">
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                    {{/if}}
+                {{/if}}
             {{/if}}
         </h{{#if level}}{{add level 1}}{{else}}2{{/if}}>
     </div>

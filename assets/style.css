@@ -1061,6 +1061,21 @@ body .content.expanded {
     transition: all var(--transition-normal);
 }
 
+/* 标题前图标固定宽度：避免不同图标宽度导致标题文本不对齐 */
+.category-header [data-editable="category-name"] > i,
+.group-header [data-editable="group-name"] > i {
+    width: 1.25em;
+    min-width: 1.25em;
+    text-align: center;
+    flex: 0 0 1.25em;
+}
+
+/* 分组标题容器：与分类保持一致的悬浮动效基础 */
+.group-header {
+    border-radius: var(--radius-md);
+    transition: all var(--transition-normal);
+}
+
 /* 仅可折叠的标题显示交互态 */
 .category-header[data-toggle="category"],
 .group-header[data-toggle="group"] {
@@ -1073,7 +1088,16 @@ body .content.expanded {
     background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
 }
 
+.group-header[data-toggle="group"]:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+}
+
 .category-header[data-toggle="category"]:active {
+    transform: translateY(0);
+}
+
+.group-header[data-toggle="group"]:active {
     transform: translateY(0);
 }
 
@@ -1161,12 +1185,6 @@ body .content.expanded {
     background: none;
 }
 
-.group-level-3 .group-header:hover,
-.category-level-3 .category-header:hover {
-    background: none;
-    transform: none;
-}
-
 .group-level-3 .group-header h4,
 .category-level-3 .category-header h4 {
     font-size: 1rem;
@@ -1211,12 +1229,6 @@ body .content.expanded {
     margin: 0 0 0.6rem 0;
     padding: 0.2rem 0;
     background: none;
-}
-
-.group-level-4 .group-header:hover,
-.category-level-4 .category-header:hover {
-    background: none;
-    transform: none;
 }
 
 .group-level-4 .group-header h5,
@@ -1275,13 +1287,16 @@ body .content.expanded {
     color: var(--accent-color);
 }
 
-/* 分组折叠图标：桌面端默认隐藏，悬停/收起时显示，避免按钮过多 */
+/* 分类/分组折叠图标：桌面端默认隐藏，悬停/收起时显示，避免按钮过多 */
 @media (hover: hover) and (pointer: fine) {
+    .category-header .toggle-icon,
     .group-header .toggle-icon {
         opacity: 0;
         transition: opacity 0.2s ease;
     }
 
+    .category-header[data-toggle="category"]:hover .toggle-icon,
+    .category.collapsed > .category-header .toggle-icon,
     .group-header[data-toggle="group"]:hover .toggle-icon,
     .group.collapsed > .group-header .toggle-icon {
         opacity: 1;
