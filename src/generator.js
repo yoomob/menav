@@ -248,6 +248,8 @@ function loadModularConfig(dirPath) {
         if (siteConfig.fonts) config.fonts = siteConfig.fonts;
         if (siteConfig.profile) config.profile = siteConfig.profile;
         if (siteConfig.social) config.social = siteConfig.social;
+        // 图标配置（icons.mode）需要作为顶层字段供模板/运行时读取
+        if (siteConfig.icons) config.icons = siteConfig.icons;
         
         // 优先使用site.yml中的navigation配置
         if (siteConfig.navigation) {
@@ -334,11 +336,24 @@ function ensureConfigDefaults(config) {
     site.external = typeof site.external === 'boolean' ? site.external : true;
   }
 
+  // 递归处理多级结构（categories/subcategories/groups/subgroups）下的 sites 默认值
+  function processNodeSitesRecursively(node) {
+    if (!node || typeof node !== 'object') return;
+
+    if (Array.isArray(node.sites)) {
+      node.sites.forEach(processSiteDefaults);
+    }
+
+    if (Array.isArray(node.subcategories)) node.subcategories.forEach(processNodeSitesRecursively);
+    if (Array.isArray(node.groups)) node.groups.forEach(processNodeSitesRecursively);
+    if (Array.isArray(node.subgroups)) node.subgroups.forEach(processNodeSitesRecursively);
+  }
+
   // 处理分类默认值的辅助函数
   function processCategoryDefaults(category) {
     category.name = category.name || '未命名分类';
     category.sites = category.sites || [];
-    category.sites.forEach(processSiteDefaults);
+    processNodeSitesRecursively(category);
   }
 
   // 为所有页面配置中的类别和站点设置默认值
@@ -1463,6 +1478,62 @@ function copyStaticFiles(config) {
         fs.copyFileSync('src/script.js', 'dist/script.js');
     } catch (e) {
         console.error('Error copying script.js:', e);
+    }
+
+    // faviconUrl（站点级自定义图标）：若使用本地路径（建议以 assets/ 开头），则复制到 dist 下同路径
+    try {
+      const copied = new Set();
+
+      const copyLocalAsset = (rawUrl) => {
+        const raw = String(rawUrl || '').trim();
+        if (!raw) return;
+        if (/^https?:\/\//i.test(raw)) return;
+
+        const rel = raw.replace(/\\/g, '/').replace(/^\.\//, '').replace(/^\//, '');
+        if (!rel.startsWith('assets/')) return;
+
+        const normalized = path.posix.normalize(rel);
+        if (!normalized.startsWith('assets/')) return;
+        if (copied.has(normalized)) return;
+        copied.add(normalized);
+
+        const srcPath = path.join(process.cwd(), normalized);
+        const destPath = path.join(process.cwd(), 'dist', normalized);
+        if (!fs.existsSync(srcPath)) {
+          console.warn(`[WARN] faviconUrl 本地文件不存在：${normalized}`);
+          return;
+        }
+
+        fs.mkdirSync(path.dirname(destPath), { recursive: true });
+        fs.copyFileSync(srcPath, destPath);
+      };
+
+      if (config && Array.isArray(config.navigation)) {
+        config.navigation.forEach(navItem => {
+          const pageId = navItem && navItem.id ? String(navItem.id) : '';
+          if (!pageId) return;
+          const pageConfig = config[pageId];
+          if (!pageConfig || typeof pageConfig !== 'object') return;
+
+          if (Array.isArray(pageConfig.sites)) {
+            pageConfig.sites.forEach(site => {
+              if (!site || typeof site !== 'object') return;
+              copyLocalAsset(site.faviconUrl);
+            });
+          }
+
+          if (Array.isArray(pageConfig.categories)) {
+            const sites = [];
+            pageConfig.categories.forEach(category => collectSitesRecursively(category, sites));
+            sites.forEach(site => {
+              if (!site || typeof site !== 'object') return;
+              copyLocalAsset(site.faviconUrl);
+            });
+          }
+        });
+      }
+    } catch (e) {
+      console.error('Error copying faviconUrl assets:', e);
     }
 
     // 如果配置了favicon，确保文件存在并复制

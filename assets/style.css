@@ -1275,6 +1275,19 @@ body .content.expanded {
     color: var(--accent-color);
 }
 
+/* 分组折叠图标：桌面端默认隐藏，悬停/收起时显示，避免按钮过多 */
+@media (hover: hover) and (pointer: fine) {
+    .group-header .toggle-icon {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .group-header[data-toggle="group"]:hover .toggle-icon,
+    .group.collapsed > .group-header .toggle-icon {
+        opacity: 1;
+    }
+}
+
 /* 展开/折叠动画 */
 .category-content, .group-content {
     overflow: visible;

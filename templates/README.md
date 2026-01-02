@@ -300,6 +300,11 @@ categories:
 
 当启用 `icons.mode: favicon`（默认）时，站点卡片会优先显示站点 favicon；当 URL 非 http/https、加载失败或网络受限，则自动回退到 Font Awesome 图标。相关助手：`ifHttpUrl`（条件）与 `encodeURIComponent`（工具）。
 
+站点级覆盖（可选，写在每个 `sites[]` 节点上）：
+- `faviconUrl`：为单站点指定图标链接（优先级最高，失败回退到手动图标；本地路径建议以 `assets/` 开头，构建会复制到 `dist/` 同路径）
+- `forceIconMode: favicon | manual`：强制该站点使用指定模式（不设置则跟随全局 `icons.mode`）
+- 优先级：`faviconUrl` > `forceIconMode` > 全局 `icons.mode`
+
 示例（与内置组件实现保持一致）：
 
 ```handlebars

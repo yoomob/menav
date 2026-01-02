@@ -261,10 +261,16 @@ window.MeNav = {
             const newSite = document.createElement('a');
             newSite.className = siteCardStyle ? `site-card site-card-${siteCardStyle}` : 'site-card';
 
-            const siteName = data.name || '未命名站点';
-            const siteUrl = data.url || '#';
-            const siteIcon = data.icon || 'fas fa-link';
-            const siteDescription = data.description || (data.url ? menavExtractDomain(data.url) : '');
+	            const siteName = data.name || '未命名站点';
+	            const siteUrl = data.url || '#';
+	            const siteIcon = data.icon || 'fas fa-link';
+	            const siteDescription = data.description || (data.url ? menavExtractDomain(data.url) : '');
+	            const siteFaviconUrl = data && data.faviconUrl ? String(data.faviconUrl).trim() : '';
+	            const siteForceIconModeRaw = data && data.forceIconMode ? String(data.forceIconMode).trim() : '';
+	            const siteForceIconMode =
+	                siteForceIconModeRaw === 'manual' || siteForceIconModeRaw === 'favicon'
+	                    ? siteForceIconModeRaw
+	                    : '';
 
             newSite.href = siteUrl;
             newSite.title = siteName + (siteDescription ? ' - ' + siteDescription : '');
@@ -276,9 +282,11 @@ window.MeNav = {
             // 设置数据属性
             newSite.setAttribute('data-type', 'site');
             newSite.setAttribute('data-name', siteName);
-            newSite.setAttribute('data-url', data.url || '');
-            newSite.setAttribute('data-icon', siteIcon);
-            newSite.setAttribute('data-description', siteDescription);
+	            newSite.setAttribute('data-url', data.url || '');
+	            newSite.setAttribute('data-icon', siteIcon);
+	            if (siteFaviconUrl) newSite.setAttribute('data-favicon-url', siteFaviconUrl);
+	            if (siteForceIconMode) newSite.setAttribute('data-force-icon-mode', siteForceIconMode);
+	            newSite.setAttribute('data-description', siteDescription);
 
             // projects repo 风格：与模板中的 repo 结构保持一致（不走 favicon 逻辑）
             if (siteCardStyle === 'repo') {
@@ -394,11 +402,46 @@ window.MeNav = {
                     iconsMode = 'favicon';
                 }
 
-                if (iconsMode === 'favicon' && data.url && /^https?:\/\//i.test(data.url)) {
-                    const faviconUrl = `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(data.url)}&size=32`;
+	                const shouldUseCustomFavicon = Boolean(siteFaviconUrl);
+	                const effectiveIconsMode = siteForceIconMode || iconsMode;
 
-                    const iconContainer = document.createElement('div');
-                    iconContainer.className = 'icon-container';
+	                if (shouldUseCustomFavicon) {
+	                    const iconContainer = document.createElement('div');
+	                    iconContainer.className = 'icon-container';
+
+	                    const placeholder = document.createElement('i');
+	                    placeholder.className = 'fas fa-circle-notch fa-spin icon-placeholder';
+	                    placeholder.setAttribute('aria-hidden', 'true');
+
+	                    const fallback = document.createElement('i');
+	                    fallback.className = `${siteIcon} icon-fallback`;
+	                    fallback.setAttribute('aria-hidden', 'true');
+
+	                    const favicon = document.createElement('img');
+	                    favicon.className = 'favicon-icon';
+	                    favicon.src = siteFaviconUrl;
+	                    favicon.alt = `${siteName} favicon`;
+	                    favicon.loading = 'lazy';
+	                    favicon.addEventListener('load', () => {
+	                        favicon.classList.add('loaded');
+	                        placeholder.classList.add('hidden');
+	                    });
+	                    favicon.addEventListener('error', () => {
+	                        favicon.classList.add('error');
+	                        placeholder.classList.add('hidden');
+	                        fallback.classList.add('visible');
+	                    });
+
+	                    iconContainer.appendChild(placeholder);
+	                    iconContainer.appendChild(favicon);
+	                    iconContainer.appendChild(fallback);
+	                    iconWrapper.appendChild(iconContainer);
+	                } else if (effectiveIconsMode === 'favicon' && siteUrl && /^https?:\/\//i.test(siteUrl)) {
+	                    const faviconUrlPrimary = `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(siteUrl)}&size=32`;
+	                    const faviconUrlFallback = `https://t3.gstatic.cn/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(siteUrl)}&size=32`;
+
+	                    const iconContainer = document.createElement('div');
+	                    iconContainer.className = 'icon-container';
 
                     const placeholder = document.createElement('i');
                     placeholder.className = 'fas fa-circle-notch fa-spin icon-placeholder';
@@ -410,14 +453,21 @@ window.MeNav = {
 
                     const favicon = document.createElement('img');
                     favicon.className = 'favicon-icon';
-                    favicon.src = faviconUrl;
+                    favicon.src = faviconUrlPrimary;
                     favicon.alt = `${siteName} favicon`;
-                    favicon.loading = 'lazy';
+	                    favicon.loading = 'lazy';
+	                    let faviconFallbackTried = false;
                     favicon.addEventListener('load', () => {
                         favicon.classList.add('loaded');
                         placeholder.classList.add('hidden');
                     });
                     favicon.addEventListener('error', () => {
+                        if (!faviconFallbackTried) {
+                            faviconFallbackTried = true;
+                            favicon.src = faviconUrlFallback;
+                            return;
+                        }
+
                         favicon.classList.add('error');
                         placeholder.classList.add('hidden');
                         fallback.classList.add('visible');
@@ -425,14 +475,14 @@ window.MeNav = {
 
                     iconContainer.appendChild(placeholder);
                     iconContainer.appendChild(favicon);
-                    iconContainer.appendChild(fallback);
-                    iconWrapper.appendChild(iconContainer);
-                } else {
-                    const iconEl = document.createElement('i');
-                    iconEl.className = `${siteIcon} site-icon`;
-                    iconEl.setAttribute('aria-hidden', 'true');
-                    iconWrapper.appendChild(iconEl);
-                }
+	                    iconContainer.appendChild(fallback);
+	                    iconWrapper.appendChild(iconContainer);
+	                } else {
+	                    const iconEl = document.createElement('i');
+	                    iconEl.className = `${siteIcon} site-icon`;
+	                    iconEl.setAttribute('aria-hidden', 'true');
+	                    iconWrapper.appendChild(iconEl);
+	                }
 
                 newSite.appendChild(iconWrapper);
                 newSite.appendChild(contentWrapper);

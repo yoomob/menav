@@ -123,6 +123,7 @@ categories:
               - name: 'Koa'
                 url: 'https://koajs.com/'
                 icon: 'fas fa-leaf'
+                forceIconMode: manual
                 description: '下一代Node.js框架'
               - name: 'NestJS'
                 url: 'https://nestjs.com/'
@@ -171,6 +172,7 @@ categories:
               - name: 'Ant Design'
                 url: 'https://ant.design/'
                 icon: 'fas fa-th'
+                forceIconMode: manual
                 description: '企业级UI设计语言'
               - name: 'Material Design'
                 url: 'https://material.io/design'
