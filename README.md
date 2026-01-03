@@ -43,6 +43,20 @@
 <details>
 <summary>点击查看/隐藏更新日志</summary>
 
+### 2026/01/03
+
+关联 Issue：[#31](https://github.com/rbetree/menav/issues/31)
+
+**1. favicon 加载优化**
+
+- 新增 `icons.region: com | cn` 配置项，允许用户选择优先使用国内源或国外源
+  - `com`（默认）：优先 gstatic.com，失败回退 gstatic.cn
+  - `cn`：优先 gstatic.cn，失败回退 gstatic.com
+- 修改 favicon 加载超时判断机制
+  - 自定义 faviconUrl：5秒超时后显示回退图标
+  - 自动 favicon：每次尝试3秒超时，最多等待6秒
+  - 避免网络慢时长时间显示加载动画
+
 ### 2026/01/02
 
 关联 Issue：[#30](https://github.com/rbetree/menav/issues/30)

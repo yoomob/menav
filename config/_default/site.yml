@@ -12,8 +12,14 @@ icons:
   # 站点卡片图标模式：
   # - favicon：自动根据 URL 加载站点 favicon（失败时回退到 Font Awesome 图标）
   # - manual：始终使用手动指定的 Font Awesome 图标（不发起外部请求）
-  # 隐私提示：启用 favicon 模式会请求第三方服务以获取图标，可能将站点 URL 发送给服务商（详见 README“隐私说明”）。
+  # 隐私提示：启用 favicon 模式会请求第三方服务以获取图标，可能将站点 URL 发送给服务商（详见 README"隐私说明"）。
   mode: favicon # 可选: favicon | manual（默认 favicon）
+
+  # favicon 服务区域选择（仅在 mode: favicon 时生效）：
+  # - com：优先使用 gstatic.com（国际版），失败后回退到 gstatic.cn（中国版）
+  # - cn：优先使用 gstatic.cn（中国版），失败后回退到 gstatic.com（国际版）
+  # 说明：如果你在中国大陆且访问 gstatic.com 较慢，建议设置为 cn 以提升图标加载速度
+  region: cn # 可选: com | cn（默认 com）
 
 # 字体设置：全站基础字体
 # - source: css | google | system

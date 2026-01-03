@@ -307,6 +307,8 @@ function ensureConfigDefaults(config) {
   result.icons = result.icons || {};
   // icons.mode: manual | favicon, 默认 favicon
   result.icons.mode = result.icons.mode || 'favicon';
+  // icons.region: com | cn, 默认 com（优先使用 gstatic.com，失败后回退到 gstatic.cn）
+  result.icons.region = result.icons.region || 'com';
 
   // 站点基本信息默认值
   result.site.title = result.site.title || 'MeNav导航';

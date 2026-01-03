@@ -392,14 +392,17 @@ window.MeNav = {
                 contentWrapper.appendChild(descEl);
 
                 let iconsMode = 'favicon';
+                let iconsRegion = 'com';
                 try {
                     const cfg =
                         window.MeNav && typeof window.MeNav.getConfig === 'function'
                             ? window.MeNav.getConfig()
                             : null;
                     iconsMode = (cfg && (cfg.data?.icons?.mode || cfg.icons?.mode)) || 'favicon';
+                    iconsRegion = (cfg && (cfg.data?.icons?.region || cfg.icons?.region)) || 'com';
                 } catch (e) {
                     iconsMode = 'favicon';
+                    iconsRegion = 'com';
                 }
 
 	                const shouldUseCustomFavicon = Boolean(siteFaviconUrl);
@@ -422,11 +425,23 @@ window.MeNav = {
 	                    favicon.src = siteFaviconUrl;
 	                    favicon.alt = `${siteName} favicon`;
 	                    favicon.loading = 'lazy';
+
+	                    // 超时处理：5秒后如果还没加载成功，显示回退图标
+	                    let loadTimeout = setTimeout(() => {
+	                        if (!favicon.classList.contains('loaded')) {
+	                            favicon.classList.add('error');
+	                            placeholder.classList.add('hidden');
+	                            fallback.classList.add('visible');
+	                        }
+	                    }, 5000);
+
 	                    favicon.addEventListener('load', () => {
+	                        clearTimeout(loadTimeout);
 	                        favicon.classList.add('loaded');
 	                        placeholder.classList.add('hidden');
 	                    });
 	                    favicon.addEventListener('error', () => {
+	                        clearTimeout(loadTimeout);
 	                        favicon.classList.add('error');
 	                        placeholder.classList.add('hidden');
 	                        fallback.classList.add('visible');
@@ -437,8 +452,13 @@ window.MeNav = {
 	                    iconContainer.appendChild(fallback);
 	                    iconWrapper.appendChild(iconContainer);
 	                } else if (effectiveIconsMode === 'favicon' && siteUrl && /^https?:\/\//i.test(siteUrl)) {
-	                    const faviconUrlPrimary = `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(siteUrl)}&size=32`;
-	                    const faviconUrlFallback = `https://t3.gstatic.cn/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(siteUrl)}&size=32`;
+	                    // 根据 icons.region 配置决定优先使用哪个域名
+	                    const faviconUrlPrimary = iconsRegion === 'cn'
+	                        ? `https://t3.gstatic.cn/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(siteUrl)}&size=32`
+	                        : `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(siteUrl)}&size=32`;
+	                    const faviconUrlFallback = iconsRegion === 'cn'
+	                        ? `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(siteUrl)}&size=32`
+	                        : `https://t3.gstatic.cn/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(siteUrl)}&size=32`;
 
 	                    const iconContainer = document.createElement('div');
 	                    iconContainer.className = 'icon-container';
@@ -457,14 +477,38 @@ window.MeNav = {
                     favicon.alt = `${siteName} favicon`;
 	                    favicon.loading = 'lazy';
 	                    let faviconFallbackTried = false;
+	                    let loadTimeout = null;
+
+	                    // 超时处理：3秒后如果还没加载成功，尝试回退 URL 或显示 Font Awesome 图标
+	                    const startTimeout = () => {
+	                        if (loadTimeout) clearTimeout(loadTimeout);
+	                        loadTimeout = setTimeout(() => {
+	                            if (!favicon.classList.contains('loaded')) {
+	                                if (!faviconFallbackTried) {
+	                                    faviconFallbackTried = true;
+	                                    favicon.src = faviconUrlFallback;
+	                                    startTimeout(); // 为 fallback URL 也设置超时
+	                                } else {
+	                                    favicon.classList.add('error');
+	                                    placeholder.classList.add('hidden');
+	                                    fallback.classList.add('visible');
+	                                }
+	                            }
+	                        }, 3000);
+	                    };
+	                    startTimeout();
+
                     favicon.addEventListener('load', () => {
+                        if (loadTimeout) clearTimeout(loadTimeout);
                         favicon.classList.add('loaded');
                         placeholder.classList.add('hidden');
                     });
                     favicon.addEventListener('error', () => {
+                        if (loadTimeout) clearTimeout(loadTimeout);
                         if (!faviconFallbackTried) {
                             faviconFallbackTried = true;
                             favicon.src = faviconUrlFallback;
+                            startTimeout(); // 为 fallback URL 也设置超时
                             return;
                         }
 

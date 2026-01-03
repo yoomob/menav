@@ -194,6 +194,48 @@ function add(a, b) {
   return numA + numB;
 }
 
+/**
+ * 根据 icons.region 配置生成 favicon URL
+ * @param {string} url 站点 URL
+ * @param {Object} options Handlebars options 对象
+ * @returns {string} favicon URL
+ * @example {{faviconUrl url}}
+ */
+function faviconUrl(url, options) {
+  if (!url) return '';
+
+  const region = options.data.root.icons?.region || 'com';
+  const domain = region === 'cn' ? 't3.gstatic.cn' : 't3.gstatic.com';
+
+  try {
+    const encodedUrl = encodeURIComponent(String(url));
+    return `https://${domain}/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodedUrl}&size=32`;
+  } catch (e) {
+    return '';
+  }
+}
+
+/**
+ * 根据 icons.region 配置生成 favicon 回退 URL
+ * @param {string} url 站点 URL
+ * @param {Object} options Handlebars options 对象
+ * @returns {string} favicon 回退 URL
+ * @example {{faviconFallbackUrl url}}
+ */
+function faviconFallbackUrl(url, options) {
+  if (!url) return '';
+
+  const region = options.data.root.icons?.region || 'com';
+  const domain = region === 'cn' ? 't3.gstatic.com' : 't3.gstatic.cn';
+
+  try {
+    const encodedUrl = encodeURIComponent(String(url));
+    return `https://${domain}/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodedUrl}&size=32`;
+  } catch (e) {
+    return '';
+  }
+}
+
 // 导出所有工具类助手函数
 module.exports = {
   slice,
@@ -205,5 +247,7 @@ module.exports = {
   pick,
   keys,
   encodeURIComponent: encodeURIComponentHelper,
-  add
+  add,
+  faviconUrl,
+  faviconFallbackUrl
 };

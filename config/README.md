@@ -106,6 +106,10 @@ MeNav 配置系统采用“完全替换”策略（不合并），按以下优�
    - `icons.mode: favicon | manual`
    - `favicon`：会请求第三方服务（Google）获取站点 favicon，失败自动回退到 Font Awesome 图标
    - `manual`：完全使用手动 Font Awesome 图标，不发起外部请求（适合内网/离线/隐私敏感场景）
+   - `icons.region: com | cn`（默认 `com`）
+     - `com`：优先使用 `gstatic.com`（国际版），失败后回退到 `gstatic.cn`（中国版）
+     - `cn`：优先使用 `gstatic.cn`（中国版），失败后回退到 `gstatic.com`（国际版）
+     - 说明：如果你在中国大陆且访问 gstatic.com 较慢，建议设置为 `cn` 以提升图标加载速度
    - 站点级覆盖（可选，写在 `pages/*.yml` 的每个 `sites[]` 节点上）：
      - `faviconUrl`：为单个站点指定图标链接（可远程或本地相对路径；本地建议以 `assets/` 开头，构建会复制到 `dist/` 同路径），优先级最高
      - `forceIconMode: favicon | manual`：强制该站点使用指定模式（不设置则跟随全局 `icons.mode`）
@@ -116,7 +120,7 @@ MeNav 配置系统采用“完全替换”策略（不合并），按以下优�
          - name: "Ant Design"
            url: "https://ant.design/"
            icon: "fas fa-th"
-           forceIconMode: manual  # 强制使用手动图标，绕过 favicon 默认“地球”图标
+           forceIconMode: manual  # 强制使用手动图标，绕过 favicon 默认"地球"图标
          - name: "Example"
            url: "https://example.com/"
            faviconUrl: "https://example.com/favicon.png"  # 单站点自定义 favicon
