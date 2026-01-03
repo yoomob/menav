@@ -274,6 +274,7 @@ window.MeNav = {
 
             newSite.href = siteUrl;
             newSite.title = siteName + (siteDescription ? ' - ' + siteDescription : '');
+            newSite.setAttribute('data-tooltip', siteName + (siteDescription ? ' - ' + siteDescription : '')); // 添加自定义 tooltip
             if (/^https?:\/\//i.test(siteUrl)) {
                 newSite.target = '_blank';
                 newSite.rel = 'noopener';
@@ -1908,4 +1909,74 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(initSearchIndex, 1000);
         }
     });
+});
+
+// Tooltip functionality for truncated text
+document.addEventListener('DOMContentLoaded', () => {
+    // Create tooltip element
+    const tooltip = document.createElement('div');
+    tooltip.className = 'custom-tooltip';
+    document.body.appendChild(tooltip);
+
+    let activeElement = null;
+
+    // Show tooltip on hover
+    document.addEventListener('mouseover', (e) => {
+        const target = e.target.closest('[data-tooltip]');
+        if (target) {
+            const tooltipText = target.getAttribute('data-tooltip');
+            if (tooltipText) {
+                activeElement = target;
+                tooltip.textContent = tooltipText;
+                tooltip.classList.add('visible');
+                updateTooltipPosition(e);
+            }
+        }
+    });
+
+    // Move tooltip with cursor
+    document.addEventListener('mousemove', (e) => {
+        if (activeElement) {
+            updateTooltipPosition(e);
+        }
+    });
+
+    // Hide tooltip on mouse out
+    document.addEventListener('mouseout', (e) => {
+        const target = e.target.closest('[data-tooltip]');
+        if (target && target === activeElement) {
+            // Check if we really left the element (not just went to a child)
+            if (!target.contains(e.relatedTarget)) {
+                activeElement = null;
+                tooltip.classList.remove('visible');
+            }
+        }
+    });
+
+    function updateTooltipPosition(e) {
+        // Position tooltip 15px below/right of cursor
+        const x = e.clientX + 15;
+        const y = e.clientY + 15;
+        
+        // Boundary checks to keep inside viewport
+        const rect = tooltip.getBoundingClientRect();
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+        
+        let finalX = x;
+        let finalY = y;
+        
+        // If tooltip goes off right edge
+        if (x + rect.width > winWidth) {
+            finalX = e.clientX - rect.width - 10;
+        }
+        
+        // If tooltip goes off bottom edge
+        if (y + rect.height > winHeight) {
+            finalY = e.clientY - rect.height - 10;
+        }
+        
+        tooltip.style.left = finalX + 'px';
+        tooltip.style.top = finalY + 'px';
+    }
 });
