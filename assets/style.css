@@ -720,14 +720,39 @@ body.loaded .layout {
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* 隐藏滚动条但保持滚动功能 */
-    scrollbar-width: none;
-    /* Firefox */
+    /* 防止“有无滚动条”导致内容横向平移（支持的浏览器会稳定预留滚动条槽位） */
+    scrollbar-gutter: stable;
+    /* 自定义滚动条颜色（Firefox） */
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-color) transparent;
 }
 
+/* 自定义滚动条（Chromium / Safari） */
 .content::-webkit-scrollbar {
-    display: none;
-    /* Webkit browsers */
+    width: 8px;
+}
+
+.content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-color);
+    border-radius: var(--radius-full);
+    /* 用透明边框制造“内边距”，更贴合卡片阴影风格 */
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-hover-color);
+}
+
+/* 回退：不支持 scrollbar-gutter 的浏览器，强制始终显示滚动条以避免横向抖动 */
+@supports not (scrollbar-gutter: stable) {
+    .content {
+        overflow-y: scroll;
+    }
 }
 
 /* 优化内容区域在侧边栏折叠状态下的边距 */
@@ -2491,12 +2516,6 @@ body .content.expanded {
         right: 1rem;
     }
 
-    /* 移动端滚动进度条调整 */
-    .scroll-progress {
-        height: var(--radius-sm);
-        /* 移动端略粗一些 */
-    }
-
     .sidebar .submenu {
         margin-left: 1rem;
     }
@@ -3000,16 +3019,4 @@ body .content.expanded {
     .sidebar.collapsed .submenu {
         display: none;
     }
-}
-
-/* 滚动进度指示条 */
-.scroll-progress {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 3px;
-    width: 0;
-    background-color: var(--accent-color);
-    z-index: 1000;
-    transition: width 0.1s ease-out;
 }

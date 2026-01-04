@@ -1174,9 +1174,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const themeToggle = document.querySelector('.theme-toggle');
   const themeIcon = themeToggle.querySelector('i');
 
-  // 滚动进度条元素
-  const scrollProgress = document.querySelector('.scroll-progress');
-
   // 移除预加载类，允许CSS过渡效果
   document.documentElement.classList.remove('preload');
 
@@ -1418,24 +1415,7 @@ document.addEventListener('DOMContentLoaded', () => {
       sidebar.classList.remove('collapsed');
       content.classList.remove('expanded');
     }
-
-    // 重新计算滚动进度
-    updateScrollProgress();
   });
-
-  // 更新滚动进度条
-  function updateScrollProgress() {
-    const scrollTop = content.scrollTop || 0;
-    const scrollHeight = content.scrollHeight - content.clientHeight || 1;
-    const scrollPercent = (scrollTop / scrollHeight) * 100;
-    scrollProgress.style.width = scrollPercent + '%';
-  }
-
-  // 监听内容区域的滚动事件
-  content.addEventListener('scroll', updateScrollProgress);
-
-  // 初始化时更新一次滚动进度
-  updateScrollProgress();
 
   // 页面切换功能
   function showPage(pageId, skipSearchReset = false) {
@@ -1465,7 +1445,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 重置滚动位置并更新进度条
     content.scrollTop = 0;
-    updateScrollProgress();
 
     // 只有在非搜索状态下才重置搜索
     if (!skipSearchReset) {
