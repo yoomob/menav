@@ -153,30 +153,42 @@ window.MeNav = {
         return menavConfigCacheValue;
     },
 
-    // 获取元素的唯一标识符
-    _getElementId: function(element) {
-        const type = element.getAttribute('data-type');
-        if (type === 'nav-item') {
-            return element.getAttribute('data-id');
-        } else if (type === 'social-link') {
-            return element.getAttribute('data-url');
-        } else {
-            return element.getAttribute('data-name');
-        }
-    },
+	    // 获取元素的唯一标识符
+	    _getElementId: function(element) {
+	        const type = element.getAttribute('data-type');
+	        if (type === 'nav-item') {
+	            return element.getAttribute('data-id');
+	        } else if (type === 'social-link') {
+	            return element.getAttribute('data-url');
+	        } else {
+	            // 优先使用 data-id（例如分类 slug），回退 data-name（兼容旧扩展/旧页面）
+	            return element.getAttribute('data-id') || element.getAttribute('data-name');
+	        }
+	    },
 
-    // 根据类型和ID查找元素
-    _findElement: function(type, id) {
-        let selector;
-        if (type === 'nav-item') {
-            selector = `[data-type="${type}"][data-id="${id}"]`;
-        } else if (type === 'social-link') {
-            selector = `[data-type="${type}"][data-url="${id}"]`;
-        } else {
-            selector = `[data-type="${type}"][data-name="${id}"]`;
-        }
-        return document.querySelector(selector);
-    },
+	    // 根据类型和ID查找元素
+	    _findElement: function(type, id) {
+	        let selector;
+	        if (type === 'nav-item') {
+	            selector = `[data-type="${type}"][data-id="${id}"]`;
+	        } else if (type === 'social-link') {
+	            selector = `[data-type="${type}"][data-url="${id}"]`;
+	        } else if (type === 'site') {
+	            // 站点：优先用 data-url（更稳定），回退 data-id/data-name
+	            return (
+	                document.querySelector(`[data-type="${type}"][data-url="${id}"]`) ||
+	                document.querySelector(`[data-type="${type}"][data-id="${id}"]`) ||
+	                document.querySelector(`[data-type="${type}"][data-name="${id}"]`)
+	            );
+	        } else {
+	            // 其他：优先 data-id（例如分类 slug），回退 data-name（兼容旧扩展/旧页面）
+	            return (
+	                document.querySelector(`[data-type="${type}"][data-id="${id}"]`) ||
+	                document.querySelector(`[data-type="${type}"][data-name="${id}"]`)
+	            );
+	        }
+	        return document.querySelector(selector);
+	    },
 
     // 更新DOM元素
     updateElement: function(type, id, newData) {
@@ -1929,19 +1941,33 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // 子菜单项点击效果
-        submenuItems.forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
+	        // 子菜单项点击效果
+	        submenuItems.forEach(item => {
+	            item.addEventListener('click', (e) => {
+	                e.preventDefault();
 
-                // 获取页面ID和分类名称
-                const pageId = item.getAttribute('data-page');
-                const categoryName = item.getAttribute('data-category');
+	                // 获取页面ID和分类名称
+	                const pageId = item.getAttribute('data-page');
+	                const categoryName = item.getAttribute('data-category');
+	                const categoryId = item.getAttribute('data-category-id');
 
-                if (pageId) {
-                    // 清除所有子菜单项的激活状态
-                    submenuItems.forEach(subItem => {
-                        subItem.classList.remove('active');
+	                const escapeSelector = value => {
+	                    if (value === null || value === undefined) return '';
+	                    const text = String(value);
+	                    if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(text);
+	                    // 回退：尽量避免打断选择器（不追求完全覆盖所有边界字符）
+	                    return text.replace(/[^a-zA-Z0-9_\u00A0-\uFFFF-]/g, '\\$&');
+	                };
+
+	                const escapeAttrValue = value => {
+	                    if (value === null || value === undefined) return '';
+	                    return String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+	                };
+
+	                if (pageId) {
+	                    // 清除所有子菜单项的激活状态
+	                    submenuItems.forEach(subItem => {
+	                        subItem.classList.remove('active');
                     });
 
                     // 激活当前子菜单项
@@ -1955,20 +1981,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     // 显示对应页面
                     showPage(pageId);
 
-                    // 等待页面切换完成后滚动到对应分类
-                    setTimeout(() => {
-                        // 查找目标分类元素
-                        const targetPage = document.getElementById(pageId);
-                        if (targetPage) {
-                            const targetCategory = Array.from(targetPage.querySelectorAll('.category h2')).find(
-                                heading => heading.textContent.trim().includes(categoryName)
-                            );
+	                    // 等待页面切换完成后滚动到对应分类
+	                    setTimeout(() => {
+	                        // 查找目标分类元素
+	                        const targetPage = document.getElementById(pageId);
+	                        if (targetPage) {
+	                            let targetCategory = null;
 
-                            if (targetCategory) {
-                                // 优化的滚动实现：滚动到使目标分类位于视口1/4处（更靠近顶部位置）
-                                try {
-                                    // 直接获取所需元素和属性，减少重复查询
-                                    const contentElement = document.querySelector('.content');
+	                            // 优先使用 slug/data-id 精准定位（解决重复命名始终命中第一个的问题）
+	                            if (categoryId) {
+	                                const escapedId = escapeSelector(categoryId);
+	                                targetCategory =
+	                                    targetPage.querySelector(`#${escapedId}`) ||
+	                                    targetPage.querySelector(
+	                                        `[data-type="category"][data-id="${escapeAttrValue(categoryId)}"]`
+	                                    );
+	                            }
+
+	                            // 回退：旧逻辑按文本包含匹配（兼容旧页面/旧数据）
+	                            if (!targetCategory && categoryName) {
+	                                targetCategory = Array.from(targetPage.querySelectorAll('.category h2')).find(
+	                                    heading => heading.textContent.trim().includes(categoryName)
+	                                );
+	                            }
+
+	                            if (targetCategory) {
+	                                // 由于对子菜单 click 做了 preventDefault，这里手动同步 hash（不触发浏览器默认跳转）
+	                                const nextHash = categoryId || categoryName;
+	                                if (nextHash) {
+	                                    try {
+	                                        history.replaceState(null, '', `#${nextHash}`);
+	                                    } catch (error) {
+	                                        // 忽略 history API 失败，避免影响滚动体验
+	                                    }
+	                                }
+
+	                                // 优化的滚动实现：滚动到使目标分类位于视口1/4处（更靠近顶部位置）
+	                                try {
+	                                    // 直接获取所需元素和属性，减少重复查询
+	                                    const contentElement = document.querySelector('.content');
 
                                     if (contentElement && contentElement.scrollHeight > contentElement.clientHeight) {
                                         // 获取目标元素相对于内容区域的位置

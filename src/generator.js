@@ -413,6 +413,46 @@ function getSubmenuForNavItem(navItem, config) {
   return null;
 }
 
+function makeCategorySlugBase(name) {
+  const raw = typeof name === 'string' ? name : String(name ?? '');
+  const trimmed = raw.trim();
+  if (!trimmed) return 'category';
+
+  // 规则：尽量可读、跨平台稳定；保留字母/数字/下划线/短横线，其它字符替换为短横线
+  // 注意：分类名允许中文等非 ASCII 字符，Node 18+ 支持 Unicode 属性类
+  const normalized = trimmed
+    .replace(/\s+/g, '-')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}_-]+/gu, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return normalized || 'category';
+}
+
+function makeUniqueSlug(base, usedSlugs) {
+  const current = usedSlugs.get(base) || 0;
+  const next = current + 1;
+  usedSlugs.set(base, next);
+  return next === 1 ? base : `${base}-${next}`;
+}
+
+function assignCategorySlugs(categories, usedSlugs) {
+  if (!Array.isArray(categories)) return;
+
+  categories.forEach(category => {
+    if (!category || typeof category !== 'object') return;
+
+    const base = makeCategorySlugBase(category.name);
+    const uniqueSlug = makeUniqueSlug(base, usedSlugs);
+    category.slug = uniqueSlug;
+
+    if (Array.isArray(category.subcategories)) {
+      assignCategorySlugs(category.subcategories, usedSlugs);
+    }
+  });
+}
+
 /**
  * 将 JSON 字符串安全嵌入到 <script> 中，避免出现 `</script>` 结束标签导致脚本块被提前终止。
  * 说明：返回值仍是合法 JSON，JSON.parse 后数据不变。
@@ -824,6 +864,16 @@ function prepareRenderData(config) {
 
   // 首页（默认页）规则：navigation 顺序第一项即首页
   renderData.homePageId = renderData.navigation && renderData.navigation[0] ? renderData.navigation[0].id : null;
+
+  // 为每个页面的分类生成稳定锚点 slug（解决重名/空格/特殊字符导致的 hash 冲突）
+  if (Array.isArray(renderData.navigation)) {
+    renderData.navigation.forEach(navItem => {
+      const pageConfig = renderData[navItem.id];
+      if (pageConfig && Array.isArray(pageConfig.categories)) {
+        assignCategorySlugs(pageConfig.categories, new Map());
+      }
+    });
+  }
 
   // 添加序列化的配置数据，用于浏览器扩展（确保包含 homePageId 等处理结果）
   renderData.configJSON = makeJsonSafeForHtmlScript(
@@ -1380,6 +1430,11 @@ function renderPage(pageId, config) {
   if (pageId === homePageId && config.profile) {
     if (config.profile.title !== undefined) data.title = config.profile.title;
     if (config.profile.subtitle !== undefined) data.subtitle = config.profile.subtitle;
+  }
+
+  // 分类锚点：为当前页面分类生成稳定 slug（用于 id/hash，避免重名/特殊字符冲突）
+  if (Array.isArray(data.categories) && data.categories.length > 0) {
+    assignCategorySlugs(data.categories, new Map());
   }
 
   if (config[pageId] && config[pageId].template) {

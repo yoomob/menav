@@ -1,6 +1,7 @@
 <section class="category {{#if level}}category-level-{{level}}{{else}}category-level-1{{/if}}"
-         id="{{name}}"
+         id="{{#if slug}}{{slug}}{{else}}{{name}}{{/if}}"
          data-type="category"
+         data-id="{{#if slug}}{{slug}}{{else}}{{name}}{{/if}}"
          data-name="{{name}}"
          data-icon="{{icon}}"
          data-level="{{#if level}}{{level}}{{else}}1{{/if}}"

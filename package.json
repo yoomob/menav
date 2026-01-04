@@ -14,9 +14,10 @@
     "sync-projects": "node ./scripts/sync-projects.js",
     "import-bookmarks": "node src/bookmark-processor.js",
     "test": "node --test test/*.js",
-    "lint": "node --check \"src/generator.js\" && node --check \"src/bookmark-processor.js\" && node --check \"src/script.js\"",
+    "lint": "node ./scripts/lint.js",
     "format": "prettier --write \"src/**/*.js\" \"scripts/**/*.js\" \"test/**/*.js\" \".github/**/*.yml\" \"*.{md,json}\" \"config/**/*.md\" \"config/**/*.yml\"",
     "format:check": "prettier --check \"src/**/*.js\" \"scripts/**/*.js\" \"test/**/*.js\" \".github/**/*.yml\" \"*.{md,json}\" \"config/**/*.md\" \"config/**/*.yml\"",
+    "format:check:changed": "node ./scripts/format-check-changed.js",
     "check": "npm run lint && npm test && npm run build"
   },
   "keywords": [
@@ -29,18 +30,14 @@
   "dependencies": {
     "js-yaml": "^4.1.1",
     "handlebars": "^4.7.8",
-    "ansi-regex": "^6.0.1",
-    "ansi-styles": "^6.2.1",
-    "supports-color": "^9.4.0",
-    "has-flag": "^5.0.1",
-    "color-convert": "^2.0.1",
-    "color-name": "^2.0.0",
-    "mime-db": "^1.52.0",
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {
-    "esbuild": "^0.20.2",
+    "esbuild": "^0.27.2",
     "prettier": "^3.4.2",
     "serve": "^14.2.5"
+  },
+  "overrides": {
+    "brace-expansion": "1.1.12"
   }
 }
