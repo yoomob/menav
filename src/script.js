@@ -17,6 +17,99 @@ function menavExtractDomain(url) {
     }
 }
 
+// URL 安全策略：默认仅允许 http/https（可加 mailto/tel）与相对链接；其他 scheme 降级为 '#'
+function menavGetAllowedUrlSchemes() {
+    try {
+        const cfg =
+            window.MeNav && typeof window.MeNav.getConfig === 'function'
+                ? window.MeNav.getConfig()
+                : null;
+        const fromConfig =
+            cfg && cfg.data && cfg.data.site && cfg.data.site.security && cfg.data.site.security.allowedSchemes;
+        if (Array.isArray(fromConfig) && fromConfig.length > 0) {
+            return fromConfig
+                .map(s => String(s || '').trim().toLowerCase().replace(/:$/, ''))
+                .filter(Boolean);
+        }
+    } catch (e) {
+        // 忽略，回退默认
+    }
+    return ['http', 'https', 'mailto', 'tel'];
+}
+
+function menavIsRelativeUrl(url) {
+    const s = String(url || '').trim();
+    return s.startsWith('#') || s.startsWith('/') || s.startsWith('./') || s.startsWith('../') || s.startsWith('?');
+}
+
+function menavSanitizeUrl(rawUrl, contextLabel) {
+    if (rawUrl === undefined || rawUrl === null) return '#';
+    const url = String(rawUrl).trim();
+    if (!url) return '#';
+
+    if (menavIsRelativeUrl(url)) return url;
+
+    // 明确拒绝协议相对 URL（//example.com），避免意外绕过策略
+    if (url.startsWith('//')) {
+        console.warn(`[MeNav][安全] 已拦截不安全 URL（协议相对形式）：${contextLabel || ''}`, url);
+        return '#';
+    }
+
+    try {
+        const parsed = new URL(url);
+        const scheme = String(parsed.protocol || '').toLowerCase().replace(/:$/, '');
+        const allowed = menavGetAllowedUrlSchemes();
+        if (allowed.includes(scheme)) return url;
+        console.warn(`[MeNav][安全] 已拦截不安全 URL scheme：${contextLabel || ''}`, url);
+        return '#';
+    } catch (e) {
+        // 既不是可识别的绝对 URL，也不是允许的相对 URL
+        console.warn(`[MeNav][安全] 已拦截无法解析的 URL：${contextLabel || ''}`, url);
+        return '#';
+    }
+}
+
+// class token 清洗：仅允许字母/数字/下划线/中划线与空格分隔，避免属性/事件注入
+function menavSanitizeClassList(rawClassList, contextLabel) {
+    const input = String(rawClassList || '').trim();
+    if (!input) return '';
+
+    const tokens = input
+        .split(/\s+/g)
+        .map(t => t.trim())
+        .filter(Boolean)
+        .map(t => t.replace(/[^\w-]/g, ''))
+        .filter(Boolean);
+
+    const sanitized = tokens.join(' ');
+    if (sanitized !== input) {
+        console.warn(`[MeNav][安全] 已清洗不安全的 icon class：${contextLabel || ''}`, rawClassList);
+    }
+    return sanitized;
+}
+
+// 版本号统一来源：优先读取 meta[menav-version]，回退到 menav-config-data.version
+function menavDetectVersion() {
+    try {
+        const meta = document.querySelector('meta[name="menav-version"]');
+        const v = meta ? String(meta.getAttribute('content') || '').trim() : '';
+        if (v) return v;
+    } catch (e) {
+        // 忽略
+    }
+
+    try {
+        const configData = document.getElementById('menav-config-data');
+        const raw = configData ? String(configData.textContent || '').trim() : '';
+        if (!raw) return '1.0.0';
+        const parsed = JSON.parse(raw);
+        const v = parsed && parsed.version ? String(parsed.version).trim() : '';
+        return v || '1.0.0';
+    } catch (e) {
+        return '1.0.0';
+    }
+}
+
 // 修复移动端 `100vh` 视口高度问题：用实际可视高度驱动布局，避免侧边栏/内容区底部被浏览器 UI 遮挡
 function menavUpdateAppHeight() {
     const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
@@ -36,7 +129,7 @@ let menavConfigCacheValue = null;
 
 // 全局MeNav对象 - 用于浏览器扩展
 window.MeNav = {
-    version: "1.0.0",
+    version: menavDetectVersion(),
 
     // 获取配置数据
     getConfig: function(options) {
@@ -90,12 +183,14 @@ window.MeNav = {
         const element = this._findElement(type, id);
         if (!element) return false;
 
-        if (type === 'site') {
-            // 更新站点卡片
-            if (newData.url) {
-                element.href = newData.url;
-                element.setAttribute('data-url', newData.url);
-            }
+	        if (type === 'site') {
+	            // 更新站点卡片
+	            if (newData.url) {
+	                const safeUrl = menavSanitizeUrl(newData.url, 'updateElement(site).url');
+	                element.setAttribute('href', safeUrl);
+	                // 保留原始 URL 供扩展/调试读取，但点击行为以 href 的安全降级为准
+	                element.setAttribute('data-url', String(newData.url).trim());
+	            }
             if (newData.name) {
                 element.querySelector('h3').textContent = newData.name;
                 element.setAttribute('data-name', newData.name);
@@ -112,7 +207,7 @@ window.MeNav = {
                     element.querySelector('i');
 
                 if (iconElement) {
-                    const nextIconClass = String(newData.icon || '').trim();
+                    const nextIconClass = menavSanitizeClassList(newData.icon, 'updateElement(site).icon');
                     const preservedClasses = [];
 
                     if (iconElement.classList.contains('icon-fallback')) {
@@ -127,7 +222,7 @@ window.MeNav = {
                         preservedClasses.forEach(cls => iconElement.classList.add(cls));
                     }
                 }
-                element.setAttribute('data-icon', newData.icon);
+                element.setAttribute('data-icon', menavSanitizeClassList(newData.icon, 'updateElement(site).data-icon'));
             }
             if (newData.title) element.title = newData.title;
 
@@ -144,15 +239,21 @@ window.MeNav = {
             if (newData.name) {
                 const titleElement = element.querySelector('h2');
                 if (titleElement) {
-                    // 保留图标
                     const iconElement = titleElement.querySelector('i');
                     const iconClass = iconElement ? iconElement.className : '';
-                    titleElement.innerHTML = `<i class="${newData.icon || iconClass}"></i> ${newData.name}`;
+                    const nextIcon = menavSanitizeClassList(newData.icon || iconClass, 'updateElement(category).icon');
+
+                    // 用 DOM API 重建标题，避免 innerHTML 注入
+                    titleElement.textContent = '';
+                    const nextIconEl = document.createElement('i');
+                    if (nextIcon) nextIconEl.className = nextIcon;
+                    titleElement.appendChild(nextIconEl);
+                    titleElement.appendChild(document.createTextNode(' ' + String(newData.name)));
                 }
                 element.setAttribute('data-name', newData.name);
             }
             if (newData.icon) {
-                element.setAttribute('data-icon', newData.icon);
+                element.setAttribute('data-icon', menavSanitizeClassList(newData.icon, 'updateElement(category).data-icon'));
             }
 
             // 触发元素更新事件
@@ -175,9 +276,9 @@ window.MeNav = {
             if (newData.icon) {
                 const iconElement = element.querySelector('i');
                 if (iconElement) {
-                    iconElement.className = newData.icon;
+                    iconElement.className = menavSanitizeClassList(newData.icon, 'updateElement(nav-item).icon');
                 }
-                element.setAttribute('data-icon', newData.icon);
+                element.setAttribute('data-icon', menavSanitizeClassList(newData.icon, 'updateElement(nav-item).data-icon'));
             }
 
             // 触发元素更新事件
@@ -188,12 +289,14 @@ window.MeNav = {
             });
 
             return true;
-        } else if (type === 'social-link') {
-            // 更新社交链接
-            if (newData.url) {
-                element.href = newData.url;
-                element.setAttribute('data-url', newData.url);
-            }
+	        } else if (type === 'social-link') {
+	            // 更新社交链接
+	            if (newData.url) {
+	                const safeUrl = menavSanitizeUrl(newData.url, 'updateElement(social-link).url');
+	                element.setAttribute('href', safeUrl);
+	                // 保留原始 URL 供扩展/调试读取，但点击行为以 href 的安全降级为准
+	                element.setAttribute('data-url', String(newData.url).trim());
+	            }
             if (newData.name) {
                 const textElement = element.querySelector('.nav-text');
                 if (textElement) {
@@ -204,9 +307,9 @@ window.MeNav = {
             if (newData.icon) {
                 const iconElement = element.querySelector('i');
                 if (iconElement) {
-                    iconElement.className = newData.icon;
+                    iconElement.className = menavSanitizeClassList(newData.icon, 'updateElement(social-link).icon');
                 }
-                element.setAttribute('data-icon', newData.icon);
+                element.setAttribute('data-icon', menavSanitizeClassList(newData.icon, 'updateElement(social-link).data-icon'));
             }
 
             // 触发元素更新事件
@@ -267,36 +370,40 @@ window.MeNav = {
 	            const siteDescription = data.description || (data.url ? menavExtractDomain(data.url) : '');
 	            const siteFaviconUrl = data && data.faviconUrl ? String(data.faviconUrl).trim() : '';
 	            const siteForceIconModeRaw = data && data.forceIconMode ? String(data.forceIconMode).trim() : '';
-	            const siteForceIconMode =
-	                siteForceIconModeRaw === 'manual' || siteForceIconModeRaw === 'favicon'
-	                    ? siteForceIconModeRaw
-	                    : '';
+		            const siteForceIconMode =
+		                siteForceIconModeRaw === 'manual' || siteForceIconModeRaw === 'favicon'
+		                    ? siteForceIconModeRaw
+		                    : '';
 
-            newSite.href = siteUrl;
-            newSite.title = siteName + (siteDescription ? ' - ' + siteDescription : '');
-            newSite.setAttribute('data-tooltip', siteName + (siteDescription ? ' - ' + siteDescription : '')); // 添加自定义 tooltip
-            if (/^https?:\/\//i.test(siteUrl)) {
-                newSite.target = '_blank';
-                newSite.rel = 'noopener';
-            }
+		            const safeSiteUrl = menavSanitizeUrl(siteUrl, 'addElement(site).url');
+		            const safeSiteIcon = menavSanitizeClassList(siteIcon, 'addElement(site).icon');
+
+	            newSite.setAttribute('href', safeSiteUrl);
+	            newSite.title = siteName + (siteDescription ? ' - ' + siteDescription : '');
+	            newSite.setAttribute('data-tooltip', siteName + (siteDescription ? ' - ' + siteDescription : '')); // 添加自定义 tooltip
+	            if (/^https?:\/\//i.test(safeSiteUrl)) {
+	                newSite.target = '_blank';
+	                newSite.rel = 'noopener';
+	            }
             
             // 设置数据属性
-            newSite.setAttribute('data-type', 'site');
-            newSite.setAttribute('data-name', siteName);
-	            newSite.setAttribute('data-url', data.url || '');
-	            newSite.setAttribute('data-icon', siteIcon);
-	            if (siteFaviconUrl) newSite.setAttribute('data-favicon-url', siteFaviconUrl);
-	            if (siteForceIconMode) newSite.setAttribute('data-force-icon-mode', siteForceIconMode);
-	            newSite.setAttribute('data-description', siteDescription);
+		            newSite.setAttribute('data-type', 'site');
+		            newSite.setAttribute('data-name', siteName);
+			            // 保留原始 URL（data-url）供扩展/调试读取；href 仍会做安全降级
+			            newSite.setAttribute('data-url', String(data.url || '').trim());
+			            newSite.setAttribute('data-icon', safeSiteIcon);
+		            if (siteFaviconUrl) newSite.setAttribute('data-favicon-url', siteFaviconUrl);
+		            if (siteForceIconMode) newSite.setAttribute('data-force-icon-mode', siteForceIconMode);
+		            newSite.setAttribute('data-description', siteDescription);
 
             // projects repo 风格：与模板中的 repo 结构保持一致（不走 favicon 逻辑）
             if (siteCardStyle === 'repo') {
                 const repoHeader = document.createElement('div');
                 repoHeader.className = 'repo-header';
 
-                const repoIcon = document.createElement('i');
-                repoIcon.className = `${siteIcon || 'fas fa-code'} repo-icon`;
-                repoIcon.setAttribute('aria-hidden', 'true');
+	                const repoIcon = document.createElement('i');
+	                repoIcon.className = `${safeSiteIcon || 'fas fa-code'} repo-icon`;
+	                repoIcon.setAttribute('aria-hidden', 'true');
 
                 const repoTitle = document.createElement('div');
                 repoTitle.className = 'repo-title';
@@ -417,8 +524,8 @@ window.MeNav = {
 	                    placeholder.className = 'fas fa-circle-notch fa-spin icon-placeholder';
 	                    placeholder.setAttribute('aria-hidden', 'true');
 
-	                    const fallback = document.createElement('i');
-	                    fallback.className = `${siteIcon} icon-fallback`;
+		                    const fallback = document.createElement('i');
+		                    fallback.className = `${safeSiteIcon} icon-fallback`;
 	                    fallback.setAttribute('aria-hidden', 'true');
 
 	                    const favicon = document.createElement('img');
@@ -452,14 +559,14 @@ window.MeNav = {
 	                    iconContainer.appendChild(favicon);
 	                    iconContainer.appendChild(fallback);
 	                    iconWrapper.appendChild(iconContainer);
-	                } else if (effectiveIconsMode === 'favicon' && siteUrl && /^https?:\/\//i.test(siteUrl)) {
-	                    // 根据 icons.region 配置决定优先使用哪个域名
-	                    const faviconUrlPrimary = iconsRegion === 'cn'
-	                        ? `https://t3.gstatic.cn/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(siteUrl)}&size=32`
-	                        : `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(siteUrl)}&size=32`;
-	                    const faviconUrlFallback = iconsRegion === 'cn'
-	                        ? `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(siteUrl)}&size=32`
-	                        : `https://t3.gstatic.cn/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(siteUrl)}&size=32`;
+		                } else if (effectiveIconsMode === 'favicon' && safeSiteUrl && /^https?:\/\//i.test(safeSiteUrl)) {
+		                    // 根据 icons.region 配置决定优先使用哪个域名
+		                    const faviconUrlPrimary = iconsRegion === 'cn'
+		                        ? `https://t3.gstatic.cn/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(safeSiteUrl)}&size=32`
+		                        : `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(safeSiteUrl)}&size=32`;
+		                    const faviconUrlFallback = iconsRegion === 'cn'
+		                        ? `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(safeSiteUrl)}&size=32`
+		                        : `https://t3.gstatic.cn/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(safeSiteUrl)}&size=32`;
 
 	                    const iconContainer = document.createElement('div');
 	                    iconContainer.className = 'icon-container';
@@ -468,8 +575,8 @@ window.MeNav = {
                     placeholder.className = 'fas fa-circle-notch fa-spin icon-placeholder';
                     placeholder.setAttribute('aria-hidden', 'true');
 
-                    const fallback = document.createElement('i');
-                    fallback.className = `${siteIcon} icon-fallback`;
+	                    const fallback = document.createElement('i');
+	                    fallback.className = `${safeSiteIcon} icon-fallback`;
                     fallback.setAttribute('aria-hidden', 'true');
 
                     const favicon = document.createElement('img');
@@ -522,12 +629,12 @@ window.MeNav = {
                     iconContainer.appendChild(favicon);
 	                    iconContainer.appendChild(fallback);
 	                    iconWrapper.appendChild(iconContainer);
-	                } else {
-	                    const iconEl = document.createElement('i');
-	                    iconEl.className = `${siteIcon} site-icon`;
-	                    iconEl.setAttribute('aria-hidden', 'true');
-	                    iconWrapper.appendChild(iconEl);
-	                }
+		                } else {
+		                    const iconEl = document.createElement('i');
+		                    iconEl.className = `${safeSiteIcon} site-icon`;
+		                    iconEl.setAttribute('aria-hidden', 'true');
+		                    iconWrapper.appendChild(iconEl);
+		                }
 
                 newSite.appendChild(iconWrapper);
                 newSite.appendChild(contentWrapper);
@@ -565,16 +672,27 @@ window.MeNav = {
             // 设置数据属性
             newCategory.setAttribute('data-type', 'category');
             newCategory.setAttribute('data-name', data.name || '未命名分类');
-            newCategory.setAttribute('data-icon', data.icon || 'fas fa-folder');
+            newCategory.setAttribute('data-icon', menavSanitizeClassList(data.icon || 'fas fa-folder', 'addElement(category).data-icon'));
             newCategory.setAttribute('data-container', 'categories');
 
-            // 添加内容
-            newCategory.innerHTML = `
-                <h2 data-editable="category-name"><i class="${data.icon || 'fas fa-folder'}"></i> ${data.name || '未命名分类'}</h2>
-                <div class="sites-grid" data-container="sites">
-                    <p class="empty-sites">暂无网站</p>
-                </div>
-            `;
+            // 添加内容（用 DOM API 构建，避免 innerHTML 注入）
+            const titleEl = document.createElement('h2');
+            titleEl.setAttribute('data-editable', 'category-name');
+            const iconEl = document.createElement('i');
+            iconEl.className = menavSanitizeClassList(data.icon || 'fas fa-folder', 'addElement(category).icon');
+            titleEl.appendChild(iconEl);
+            titleEl.appendChild(document.createTextNode(' ' + String(data.name || '未命名分类')));
+
+            const sitesGrid = document.createElement('div');
+            sitesGrid.className = 'sites-grid';
+            sitesGrid.setAttribute('data-container', 'sites');
+            const emptyEl = document.createElement('p');
+            emptyEl.className = 'empty-sites';
+            emptyEl.textContent = '暂无网站';
+            sitesGrid.appendChild(emptyEl);
+
+            newCategory.appendChild(titleEl);
+            newCategory.appendChild(sitesGrid);
 
             // 添加到DOM
             parent.appendChild(newCategory);

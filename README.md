@@ -45,12 +45,19 @@
 
 ### 2026/01/04
 
-**1. PageSpeed 首屏性能优化**
+**1. 首屏性能优化**
 
 - 移除首页副标题固定 Quicksand 外链字体，改为跟随全站字体
 - 字体外链 CSS 支持 `fonts.preload: true`（`preload + onload` 非阻塞加载，含 `<noscript>` 回退）
 - Font Awesome CSS 改为 `preload + onload` 非阻塞加载，降低 render-blocking 影响
 - 构建阶段压缩 `style.css` / `script.js` / `pinyin-match.js`，减少传输体积
+
+**2. 安全与部署稳定性**
+
+- 链接安全加固：模板与运行时统一校验 URL scheme（不安全链接降级为 `#`），新增 `security.allowedSchemes` 支持显式放行自定义协议
+- 去除外部输入的 `innerHTML` 拼接：分类标题更新/新增分类改用 DOM API 构建，降低注入风险
+- `sync-articles` 对齐 best-effort：同步失败不再以非 0 退出码阻断构建/部署
+- 版本号来源统一：`window.MeNav.version` 不再写死，自动读取构建注入版本（用于扩展/调试识别）
 
 ### 2026/01/03
 

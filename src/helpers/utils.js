@@ -236,6 +236,62 @@ function faviconFallbackUrl(url, options) {
   }
 }
 
+/**
+ * 安全 URL 输出：用于 href 等场景，防止 javascript: 等危险 scheme 变成可点击链接
+ * - 默认允许：http/https/mailto/tel + 相对链接（# / ./ ../ ?）
+ * - 允许通过 site.security.allowedSchemes 扩展白名单（例如 obsidian/vscode）
+ * @param {string} url 输入 URL
+ * @param {Object} options Handlebars options 对象
+ * @returns {string} 安全的 URL（不安全时返回 #）
+ * @example <a href="{{safeUrl url}}">...</a>
+ */
+function safeUrl(url, options) {
+  const raw = String(url || '').trim();
+  if (!raw) return '#';
+
+  // 允许相对链接
+  if (
+    raw.startsWith('#') ||
+    raw.startsWith('/') ||
+    raw.startsWith('./') ||
+    raw.startsWith('../') ||
+    raw.startsWith('?')
+  ) {
+    return raw;
+  }
+
+  // 拒绝协议相对 URL（//example.com），避免绕过策略
+  if (raw.startsWith('//')) {
+    console.warn(`[WARN] 已拦截不安全 URL（协议相对形式）：${raw}`);
+    return '#';
+  }
+
+  const allowedFromConfig =
+    options &&
+    options.data &&
+    options.data.root &&
+    options.data.root.site &&
+    options.data.root.site.security &&
+    options.data.root.site.security.allowedSchemes;
+
+  const allowedSchemes = Array.isArray(allowedFromConfig) && allowedFromConfig.length > 0
+    ? allowedFromConfig
+        .map(s => String(s || '').trim().toLowerCase().replace(/:$/, ''))
+        .filter(Boolean)
+    : ['http', 'https', 'mailto', 'tel'];
+
+  try {
+    const parsed = new URL(raw);
+    const scheme = String(parsed.protocol || '').toLowerCase().replace(/:$/, '');
+    if (allowedSchemes.includes(scheme)) return raw;
+    console.warn(`[WARN] 已拦截不安全 URL scheme：${raw}`);
+    return '#';
+  } catch (e) {
+    console.warn(`[WARN] 已拦截无法解析的 URL：${raw}`);
+    return '#';
+  }
+}
+
 // 导出所有工具类助手函数
 module.exports = {
   slice,
@@ -249,5 +305,6 @@ module.exports = {
   encodeURIComponent: encodeURIComponentHelper,
   add,
   faviconUrl,
-  faviconFallbackUrl
+  faviconFallbackUrl,
+  safeUrl
 };

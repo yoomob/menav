@@ -23,7 +23,7 @@
     {{#if projectsMeta.heatmap}}
     <div class="welcome-section-side">
         <div class="heatmap-container" title="我的 GitHub 贡献热力图">
-            <a href="{{projectsMeta.heatmap.profileUrl}}" target="_blank" rel="noopener">
+            <a href="{{safeUrl projectsMeta.heatmap.profileUrl}}" target="_blank" rel="noopener">
                 <img class="heatmap-img"
                      src="{{projectsMeta.heatmap.imageUrl}}"
                      alt="Github Chart"

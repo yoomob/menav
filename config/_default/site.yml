@@ -21,6 +21,19 @@ icons:
   # 说明：如果你在中国大陆且访问 gstatic.com 较慢，建议设置为 cn 以提升图标加载速度
   region: cn # 可选: com | cn（默认 com）
 
+# 安全策略（可选）：链接 URL scheme 白名单
+# - 默认允许：http/https/mailto/tel + 所有相对链接（# / ./ ../ ?）
+# - 其他 scheme 会在页面中安全降级为 # 并输出告警（避免 javascript: 等危险链接变成可点击）
+# - 如需支持 obsidian://、vscode:// 等自定义协议，可在此显式放行
+security:
+  allowedSchemes:
+    - http
+    - https
+    - mailto
+    - tel
+  # 示例：
+  # allowedSchemes: [http, https, mailto, tel, obsidian, vscode]
+
 # 字体设置：全站基础字体
 # - source: css | google | system
 # - css: 通过 cssUrl 引入第三方字体 CSS

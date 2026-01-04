@@ -672,8 +672,8 @@ async function main() {
 if (require.main === module) {
   main().catch(err => {
     console.error('[ERROR] sync-articles 执行失败：', err);
-    // best-effort：除非是非常规异常，否则不阻断 CI；此处仍保留非 0 退出码便于本地排查
-    process.exitCode = 1;
+    // best-effort：不阻断后续 build/deploy（错误已输出到日志，便于排查）
+    process.exitCode = 0;
   });
 }
 
