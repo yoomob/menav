@@ -15,7 +15,7 @@ const {
 function stripYamlComments(yamlText) {
   return yamlText
     .split(/\r?\n/)
-    .filter(line => !/^\s*#/.test(line))
+    .filter((line) => !/^\s*#/.test(line))
     .join('\n')
     .trim();
 }
@@ -49,7 +49,7 @@ test('parseBookmarks：解析书签栏、根目录书签与图标映射', () => 
   assert.equal(bookmarks.categories[0].sites[0].name, 'GitHub');
   assert.equal(bookmarks.categories[0].sites[0].icon, 'fab fa-github');
 
-  const tools = bookmarks.categories.find(c => c.name === '工具');
+  const tools = bookmarks.categories.find((c) => c.name === '工具');
   assert.ok(tools, '应解析出“工具”分类');
   assert.ok(Array.isArray(tools.sites));
   assert.equal(tools.sites[0].name, 'Google');
@@ -62,11 +62,26 @@ test('templates：subgroups（第4层）应可渲染到页面', () => {
   const hbs = Handlebars.create();
   registerAllHelpers(hbs);
 
-  const category = fs.readFileSync(path.join(__dirname, '..', 'templates', 'components', 'category.hbs'), 'utf8');
-  const group = fs.readFileSync(path.join(__dirname, '..', 'templates', 'components', 'group.hbs'), 'utf8');
-  const pageHeader = fs.readFileSync(path.join(__dirname, '..', 'templates', 'components', 'page-header.hbs'), 'utf8');
-  const siteCard = fs.readFileSync(path.join(__dirname, '..', 'templates', 'components', 'site-card.hbs'), 'utf8');
-  const page = fs.readFileSync(path.join(__dirname, '..', 'templates', 'pages', 'bookmarks.hbs'), 'utf8');
+  const category = fs.readFileSync(
+    path.join(__dirname, '..', 'templates', 'components', 'category.hbs'),
+    'utf8'
+  );
+  const group = fs.readFileSync(
+    path.join(__dirname, '..', 'templates', 'components', 'group.hbs'),
+    'utf8'
+  );
+  const pageHeader = fs.readFileSync(
+    path.join(__dirname, '..', 'templates', 'components', 'page-header.hbs'),
+    'utf8'
+  );
+  const siteCard = fs.readFileSync(
+    path.join(__dirname, '..', 'templates', 'components', 'site-card.hbs'),
+    'utf8'
+  );
+  const page = fs.readFileSync(
+    path.join(__dirname, '..', 'templates', 'pages', 'bookmarks.hbs'),
+    'utf8'
+  );
 
   hbs.registerPartial('category', category);
   hbs.registerPartial('group', group);
@@ -96,7 +111,12 @@ test('templates：subgroups（第4层）应可渲染到页面', () => {
                     name: 'React生态',
                     icon: 'fab fa-react',
                     sites: [
-                      { name: 'React', url: 'https://reactjs.org/', icon: 'fab fa-react', description: 'React官方' },
+                      {
+                        name: 'React',
+                        url: 'https://reactjs.org/',
+                        icon: 'fab fa-react',
+                        description: 'React官方',
+                      },
                     ],
                   },
                 ],
@@ -119,7 +139,9 @@ test('generateBookmarksYaml：生成 YAML 且可被解析', () => {
       {
         name: '示例分类',
         icon: 'fas fa-folder',
-        sites: [{ name: 'Example', url: 'https://example.com', icon: 'fas fa-link', description: '' }],
+        sites: [
+          { name: 'Example', url: 'https://example.com', icon: 'fas fa-link', description: '' },
+        ],
       },
     ],
   };
@@ -140,11 +162,7 @@ test('upsertBookmarksNavInSiteYml：无 navigation 时追加并幂等', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'menav-test-'));
   const filePath = path.join(tmp, 'site.yml');
 
-  fs.writeFileSync(
-    filePath,
-    `title: Test Site\n`,
-    'utf8',
-  );
+  fs.writeFileSync(filePath, `title: Test Site\n`, 'utf8');
 
   const r1 = upsertBookmarksNavInSiteYml(filePath);
   assert.equal(r1.updated, true);

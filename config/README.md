@@ -117,13 +117,13 @@ MeNav 配置系统采用“完全替换”策略（不合并），按以下优�
      - 示例：
        ```yml
        sites:
-         - name: "Ant Design"
-           url: "https://ant.design/"
-           icon: "fas fa-th"
-           forceIconMode: manual  # 强制使用手动图标，绕过 favicon 默认"地球"图标
-         - name: "Example"
-           url: "https://example.com/"
-           faviconUrl: "https://example.com/favicon.png"  # 单站点自定义 favicon
+         - name: 'Ant Design'
+           url: 'https://ant.design/'
+           icon: 'fas fa-th'
+           forceIconMode: manual # 强制使用手动图标，绕过 favicon 默认"地球"图标
+         - name: 'Example'
+           url: 'https://example.com/'
+           faviconUrl: 'https://example.com/favicon.png' # 单站点自定义 favicon
        ```
 
 3. **安全策略（链接白名单）**
@@ -254,46 +254,46 @@ MeNav 配置系统采用“完全替换”策略：只会选择一套目录加�
 
 ```yaml
 # 网站基本信息
-title: "我的个人导航"
-description: "个人收藏的网站导航页"
-keywords: "导航,网址,书签,个人主页"
+title: '我的个人导航'
+description: '个人收藏的网站导航页'
+keywords: '导航,网址,书签,个人主页'
 
 # 个人资料配置
 profile:
-  title: "个人导航站"
-  subtitle: "我收藏的精选网站"
+  title: '个人导航站'
+  subtitle: '我收藏的精选网站'
 
 # 字体：全站基础字体
 fonts:
   source: css
-  cssUrl: "https://fontsapi.zeoseven.com/292/main/result.css"
+  cssUrl: 'https://fontsapi.zeoseven.com/292/main/result.css'
   preload: true
-  family: "LXGW WenKai"
+  family: 'LXGW WenKai'
   weight: normal
-  
+
 # 社交媒体链接
 social:
-  - name: "GitHub"
-    url: "https://github.com/username"
-    icon: "fab fa-github"
-  - name: "Twitter"
-    url: "https://twitter.com/username"
-    icon: "fab fa-twitter"
+  - name: 'GitHub'
+    url: 'https://github.com/username'
+    icon: 'fab fa-github'
+  - name: 'Twitter'
+    url: 'https://twitter.com/username'
+    icon: 'fab fa-twitter'
 
 # 导航配置
 navigation:
-  - name: "常用"
-    icon: "fas fa-star"
-    id: "common"
-  - name: "项目"
-    icon: "fas fa-project-diagram"
-    id: "projects"
-  - name: "文章"
-    icon: "fas fa-book"
-    id: "articles"
-  - name: "书签"
-    icon: "fas fa-bookmark"
-    id: "bookmarks"
+  - name: '常用'
+    icon: 'fas fa-star'
+    id: 'common'
+  - name: '项目'
+    icon: 'fas fa-project-diagram'
+    id: 'projects'
+  - name: '文章'
+    icon: 'fas fa-book'
+    id: 'articles'
+  - name: '书签'
+    icon: 'fas fa-bookmark'
+    id: 'bookmarks'
 ```
 
 ### 通用页面配置示例（例如 common.yml）
@@ -301,25 +301,25 @@ navigation:
 ```yaml
 # 页面分类配置
 categories:
-  - name: "常用工具"
-    icon: "fas fa-tools"
+  - name: '常用工具'
+    icon: 'fas fa-tools'
     sites:
-      - name: "Google"
-        url: "https://www.google.com"
-        description: "全球最大的搜索引擎"
-        icon: "fab fa-google"
-      - name: "GitHub"
-        url: "https://github.com"
-        description: "代码托管平台"
-        icon: "fab fa-github"
-  
-  - name: "学习资源"
-    icon: "fas fa-graduation-cap"
+      - name: 'Google'
+        url: 'https://www.google.com'
+        description: '全球最大的搜索引擎'
+        icon: 'fab fa-google'
+      - name: 'GitHub'
+        url: 'https://github.com'
+        description: '代码托管平台'
+        icon: 'fab fa-github'
+
+  - name: '学习资源'
+    icon: 'fas fa-graduation-cap'
     sites:
-      - name: "MDN Web Docs"
-        url: "https://developer.mozilla.org"
-        description: "Web开发技术文档"
-        icon: "fab fa-firefox-browser"
+      - name: 'MDN Web Docs'
+        url: 'https://developer.mozilla.org'
+        description: 'Web开发技术文档'
+        icon: 'fab fa-firefox-browser'
 ```
 
 ## 最佳实践

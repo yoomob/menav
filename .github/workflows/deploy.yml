@@ -2,12 +2,12 @@ name: Build and Deploy Site
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
   schedule:
     # 定时刷新 RSS / projects 仓库元信息（GitHub Actions 的 cron 使用 UTC 时区）
     - cron: '0 2 * * *'
-  
+
 # 设置GITHUB_TOKEN的权限
 permissions:
   contents: write
@@ -16,9 +16,9 @@ permissions:
 
 # 允许一个并发部署
 concurrency:
-  group: "pages"
+  group: 'pages'
   cancel-in-progress: true
-  
+
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
@@ -27,19 +27,19 @@ jobs:
         uses: actions/checkout@v4
         # 使用persist-credentials: false，以便后续步骤可以使用自定义的提交者
         with:
-          persist-credentials: false 
+          persist-credentials: false
           fetch-depth: 0 # 获取所有历史记录以进行diff检查
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
-      # --- 书签处理步骤 --- 
+
+      # --- 书签处理步骤 ---
       - name: Check for bookmark HTML files
         id: check_bookmark_files
         run: |
@@ -50,7 +50,7 @@ jobs:
             echo "found=false" >> $GITHUB_OUTPUT
             echo "No bookmark HTML files found, skipping bookmark processing."
           fi
-        
+
       - name: Process bookmark files
         if: steps.check_bookmark_files.outputs.found == 'true'
         env:
@@ -58,7 +58,7 @@ jobs:
         run: |
           echo "Processing bookmark files..."
           node src/bookmark-processor.js
-          
+
       - name: Debug directory contents
         if: steps.check_bookmark_files.outputs.found == 'true'
         run: |
@@ -77,13 +77,13 @@ jobs:
           else 
             echo "✗ config/user/pages directory does not exist"
           fi
-        
+
       - name: Commit bookmark configuration changes
         if: steps.check_bookmark_files.outputs.found == 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action (Bookmarks)"
-          
+
           # Check if config/user/pages/bookmarks.yml exists
           if [ -f config/user/pages/bookmarks.yml ]; then
             # Check if this is a new file or it has changes
@@ -117,7 +117,7 @@ jobs:
             echo "Current directory contents:"
             ls -la config/user/pages/ || echo "Directory does not exist"
           fi
-          
+
       - name: Clean up processed bookmark files
         if: steps.check_bookmark_files.outputs.found == 'true'
         run: |
@@ -153,7 +153,6 @@ jobs:
              echo "No HTML files found to clean up."
           fi
       # --- 书签处理步骤结束 ---
-
       - name: Push configuration changes (if any)
         # 只有在书签处理步骤修改了文件时才推送
         # 使用 GITHUB_TOKEN 推送
@@ -161,7 +160,7 @@ jobs:
         run: |
           echo "Checking git status before pushing..."
           git status
-          
+
           echo "Checking config/user/pages directory before pushing..."
           if [ -d config/user/pages ]; then 
             echo "✓ config/user/pages directory exists"
@@ -169,11 +168,11 @@ jobs:
           else 
             echo "✗ WARNING: config/user/pages directory does not exist before pushing!"
           fi
-          
+
           echo "Pushing changes to repository..."
           git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${{ github.ref_name }}
         env:
-           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # --- 网站构建和部署步骤 ---
       # 同步时效性数据（best-effort）：projects 仓库信息、articles RSS 聚合
@@ -188,7 +187,7 @@ jobs:
 
       - name: Build site (clean dist + generate)
         run: npm run build
-        
+
       - name: Check favicon
         run: |
           if [ -f dist/favicon.ico ]; then
@@ -199,15 +198,15 @@ jobs:
             # 暂时改为警告，避免因为图标问题阻止部署
             # exit 1 
           fi
-        
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
-        
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'dist'
-          
+
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4 
+        uses: actions/deploy-pages@v4

@@ -20,9 +20,24 @@ test('首页（navigation 第一项）应使用 profile 覆盖 title/subtitle �
         { id: 'home', name: '首页', icon: 'fas fa-home' },
         { id: 'projects', name: '项目', icon: 'fas fa-project-diagram' },
       ],
-      bookmarks: { title: '书签页标题', subtitle: '书签页副标题', template: 'bookmarks', categories: [] },
-      home: { title: 'HOME_PAGE_TITLE', subtitle: 'HOME_PAGE_SUBTITLE', template: 'page', categories: [] },
-      projects: { title: '项目页标题', subtitle: '项目页副标题', template: 'projects', categories: [] },
+      bookmarks: {
+        title: '书签页标题',
+        subtitle: '书签页副标题',
+        template: 'bookmarks',
+        categories: [],
+      },
+      home: {
+        title: 'HOME_PAGE_TITLE',
+        subtitle: 'HOME_PAGE_SUBTITLE',
+        template: 'page',
+        categories: [],
+      },
+      projects: {
+        title: '项目页标题',
+        subtitle: '项目页副标题',
+        template: 'projects',
+        categories: [],
+      },
     };
 
     const pages = generateAllPagesHTML(config);

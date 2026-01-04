@@ -52,7 +52,7 @@ test('多级结构下 sites.external 未配置时应默认 true，且 external:f
         '                  - name: DeepExternalFalse',
         '                    url: https://example.com/deep-false',
         '                    external: false',
-        ''
+        '',
       ].join('\n'),
       'utf8'
     );
@@ -67,4 +67,3 @@ test('多级结构下 sites.external 未配置时应默认 true，且 external:f
     assert.equal(deepSites[1].external, false);
   });
 });
-

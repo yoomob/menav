@@ -38,7 +38,14 @@ test('friends/articles：应恢复分类展示（扩展仍以 data-* 结构为�
           {
             name: '技术博主',
             icon: 'fas fa-user-friends',
-            sites: [{ name: 'Example', url: 'https://example.com', icon: 'fas fa-link', description: 'desc' }],
+            sites: [
+              {
+                name: 'Example',
+                url: 'https://example.com',
+                icon: 'fas fa-link',
+                description: 'desc',
+              },
+            ],
           },
         ],
       },
@@ -50,7 +57,14 @@ test('friends/articles：应恢复分类展示（扩展仍以 data-* 结构为�
           {
             name: '最新文章',
             icon: 'fas fa-pen',
-            sites: [{ name: 'Article A', url: 'https://example.com/a', icon: 'fas fa-link', description: 'summary' }],
+            sites: [
+              {
+                name: 'Article A',
+                url: 'https://example.com/a',
+                icon: 'fas fa-link',
+                description: 'summary',
+              },
+            ],
           },
         ],
       },
@@ -61,15 +75,27 @@ test('friends/articles：应恢复分类展示（扩展仍以 data-* 结构为�
     assert.ok(typeof pages.friends === 'string' && pages.friends.length > 0);
     assert.ok(pages.friends.includes('page-template-friends'));
     assert.ok(pages.friends.includes('sites-grid'));
-    assert.ok(pages.friends.includes('class="site-card'), 'friends 应使用普通 site-card 样式（图标在左，标题在右）');
-    assert.ok(!pages.friends.includes('site-card-friend'), 'friends 不应使用 site-card-friend 变体样式');
+    assert.ok(
+      pages.friends.includes('class="site-card'),
+      'friends 应使用普通 site-card 样式（图标在左，标题在右）'
+    );
+    assert.ok(
+      !pages.friends.includes('site-card-friend'),
+      'friends 不应使用 site-card-friend 变体样式'
+    );
     assert.ok(pages.friends.includes('category-header'), 'friends 应输出分类标题结构');
 
     assert.ok(typeof pages.articles === 'string' && pages.articles.length > 0);
     assert.ok(pages.articles.includes('page-template-articles'));
     assert.ok(pages.articles.includes('sites-grid'));
-    assert.ok(pages.articles.includes('class="site-card'), 'articles 应使用普通 site-card 样式（图标在左，标题在右）');
-    assert.ok(!pages.articles.includes('site-card-article'), 'articles 不应使用 site-card-article 变体样式');
+    assert.ok(
+      pages.articles.includes('class="site-card'),
+      'articles 应使用普通 site-card 样式（图标在左，标题在右）'
+    );
+    assert.ok(
+      !pages.articles.includes('site-card-article'),
+      'articles 不应使用 site-card-article 变体样式'
+    );
     assert.ok(pages.articles.includes('category-header'), 'articles 应输出分类标题结构');
   });
 });
@@ -92,13 +118,22 @@ test('friends/articles：页面配置使用顶层 sites 时应自动映射为分
         title: '友情链接',
         subtitle: '朋友们',
         template: 'page',
-        sites: [{ name: 'Example', url: 'https://example.com', icon: 'fas fa-link', description: 'desc' }],
+        sites: [
+          { name: 'Example', url: 'https://example.com', icon: 'fas fa-link', description: 'desc' },
+        ],
       },
       articles: {
         title: '文章',
         subtitle: '文章入口',
         template: 'articles',
-        sites: [{ name: 'Article A', url: 'https://example.com/a', icon: 'fas fa-link', description: 'summary' }],
+        sites: [
+          {
+            name: 'Article A',
+            url: 'https://example.com/a',
+            icon: 'fas fa-link',
+            description: 'summary',
+          },
+        ],
       },
     };
 
@@ -107,15 +142,27 @@ test('friends/articles：页面配置使用顶层 sites 时应自动映射为分
     assert.ok(typeof pages.friends === 'string' && pages.friends.length > 0);
     assert.ok(pages.friends.includes('page-template-friends'));
     assert.ok(pages.friends.includes('sites-grid'));
-    assert.ok(pages.friends.includes('class="site-card'), 'friends 应使用普通 site-card 样式（图标在左，标题在右）');
-    assert.ok(!pages.friends.includes('site-card-friend'), 'friends 不应使用 site-card-friend 变体样式');
+    assert.ok(
+      pages.friends.includes('class="site-card'),
+      'friends 应使用普通 site-card 样式（图标在左，标题在右）'
+    );
+    assert.ok(
+      !pages.friends.includes('site-card-friend'),
+      'friends 不应使用 site-card-friend 变体样式'
+    );
     assert.ok(pages.friends.includes('category-header'), 'friends 应输出分类标题结构');
 
     assert.ok(typeof pages.articles === 'string' && pages.articles.length > 0);
     assert.ok(pages.articles.includes('page-template-articles'));
     assert.ok(pages.articles.includes('sites-grid'));
-    assert.ok(pages.articles.includes('class="site-card'), 'articles 应使用普通 site-card 样式（图标在左，标题在右）');
-    assert.ok(!pages.articles.includes('site-card-article'), 'articles 不应使用 site-card-article 变体样式');
+    assert.ok(
+      pages.articles.includes('class="site-card'),
+      'articles 应使用普通 site-card 样式（图标在左，标题在右）'
+    );
+    assert.ok(
+      !pages.articles.includes('site-card-article'),
+      'articles 不应使用 site-card-article 变体样式'
+    );
     assert.ok(pages.articles.includes('category-header'), 'articles 应输出分类标题结构');
   });
 });
@@ -191,7 +238,14 @@ test('projects：应输出代码仓库风格卡片（site-card-repo）', () => {
           {
             name: '项目',
             icon: 'fas fa-code',
-            sites: [{ name: 'Proj', url: 'https://example.com', icon: 'fas fa-link', description: 'desc' }],
+            sites: [
+              {
+                name: 'Proj',
+                url: 'https://example.com',
+                icon: 'fas fa-link',
+                description: 'desc',
+              },
+            ],
           },
         ],
       },
@@ -231,10 +285,10 @@ test('articles Phase 2：存在 RSS 缓存时渲染文章条目，并隐藏扩�
               publishedAt: '2025-12-25T12:00:00.000Z',
               source: 'Example Blog',
               sourceUrl: 'https://example.com',
-              icon: 'fas fa-pen'
-            }
+              icon: 'fas fa-pen',
+            },
           ],
-          stats: { totalArticles: 1 }
+          stats: { totalArticles: 1 },
         },
         null,
         2
@@ -259,7 +313,14 @@ test('articles Phase 2：存在 RSS 缓存时渲染文章条目，并隐藏扩�
             {
               name: '来源',
               icon: 'fas fa-pen',
-              sites: [{ name: 'Source A', url: 'https://example.com', icon: 'fas fa-link', description: 'desc' }],
+              sites: [
+                {
+                  name: 'Source A',
+                  url: 'https://example.com',
+                  icon: 'fas fa-link',
+                  description: 'desc',
+                },
+              ],
             },
           ],
         },
@@ -269,7 +330,10 @@ test('articles Phase 2：存在 RSS 缓存时渲染文章条目，并隐藏扩�
       const html = pages.articles;
 
       assert.ok(typeof html === 'string' && html.length > 0);
-      assert.ok(html.includes('data-type="article"'), '文章条目卡片应为 data-type="article"（只读）');
+      assert.ok(
+        html.includes('data-type="article"'),
+        '文章条目卡片应为 data-type="article"（只读）'
+      );
       assert.ok(html.includes('site-card-meta'), '文章条目应展示日期/来源元信息');
       assert.ok(html.includes('Example Blog'));
       assert.ok(html.includes('2025-12-25'));

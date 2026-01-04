@@ -30,9 +30,9 @@ function renderBookmarksWithSite(site) {
         {
           name: '分类',
           icon: 'fas fa-folder',
-          sites: [site]
-        }
-      ]
+          sites: [site],
+        },
+      ],
     },
     false
   );
@@ -45,7 +45,7 @@ test('站点配置包含 faviconUrl（本地 assets 路径）时，渲染 bookma
       url: 'https://intranet.example/',
       faviconUrl: 'assets/menav.svg',
       icon: 'fas fa-link',
-      external: true
+      external: true,
     });
 
     assert.match(html, /data-favicon-url="assets\/menav\.svg"/);
@@ -60,7 +60,7 @@ test('站点配置包含 faviconUrl（在线 ico）时，渲染 bookmarks 不应
       url: 'https://example.com/',
       faviconUrl: 'https://content.webcull.com/images/websites/icons/470/695/b788b0.ico',
       icon: 'fas fa-link',
-      external: true
+      external: true,
     });
 
     assert.match(
@@ -73,4 +73,3 @@ test('站点配置包含 faviconUrl（在线 ico）时，渲染 bookmarks 不应
     );
   });
 });
-

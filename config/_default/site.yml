@@ -41,7 +41,7 @@ security:
 # - system: 只使用本地/系统字体，不额外发起请求
 fonts:
   source: css
-  cssUrl: "https://fontsapi.zeoseven.com/292/main/result.css"
+  cssUrl: 'https://fontsapi.zeoseven.com/292/main/result.css'
   preload: true # 可选：使用 preload+onload 的方式非阻塞加载字体 CSS（更利于首屏性能）
   family: LXGW WenKai
   weight: normal
@@ -67,23 +67,23 @@ rss:
   enabled: true
   cacheDir: dev
   fetch:
-    timeoutMs: 10000       # 单请求超时（毫秒）
-    totalTimeoutMs: 60000  # 全流程总超时（毫秒）
-    concurrency: 5         # 并发抓取站点数
-    maxRetries: 1          # 单站点重试次数（best-effort）
-    maxRedirects: 3        # 最大重定向次数
+    timeoutMs: 10000 # 单请求超时（毫秒）
+    totalTimeoutMs: 60000 # 全流程总超时（毫秒）
+    concurrency: 5 # 并发抓取站点数
+    maxRetries: 1 # 单站点重试次数（best-effort）
+    maxRedirects: 3 # 最大重定向次数
   articles:
-    perSite: 8             # 单站点最多抓取条数
-    total: 50              # 全站聚合上限
-    summaryMaxLength: 200  # 摘要最大长度（字符）
+    perSite: 8 # 单站点最多抓取条数
+    total: 50 # 全站聚合上限
+    summaryMaxLength: 200 # 摘要最大长度（字符）
 
 # GitHub：用于 projects 页面右侧“贡献热力图”（可选）
 # - username：你的 GitHub 用户名（例如 torvalds）
 # - heatmapColor：热力图主题色（不带 #，例如 339af0）
 github:
-  username: "rbetree"      # 你的 GitHub 用户名（例如 torvalds；为空则 projects 页不展示热力图）
+  username: 'rbetree' # 你的 GitHub 用户名（例如 torvalds；为空则 projects 页不展示热力图）
   heatmapColor: 339af0
-  cacheDir: dev     # projects 仓库元信息缓存目录（默认 dev，仓库默认 gitignore）
+  cacheDir: dev # projects 仓库元信息缓存目录（默认 dev，仓库默认 gitignore）
 
 # 社交媒体链接：显示在侧边栏底部；可按需增删
 social:
@@ -102,9 +102,9 @@ social:
 
 # 导航配置（顺序第一项即首页/默认打开页）
 navigation:
-  - name: 常用        # 菜单名称
-    icon: fas fa-star  # Font Awesome 图标类
-    id: common          # 页面标识符（唯一，需与 pages/<id>.yml 对应）
+  - name: 常用 # 菜单名称
+    icon: fas fa-star # Font Awesome 图标类
+    id: common # 页面标识符（唯一，需与 pages/<id>.yml 对应）
   - name: 项目
     icon: fas fa-project-diagram
     id: projects

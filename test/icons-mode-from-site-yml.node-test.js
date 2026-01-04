@@ -46,4 +46,3 @@ test('未配置 icons.mode 时应回退为默认 favicon', () => {
     assert.equal(config.icons.mode, 'favicon');
   });
 });
-

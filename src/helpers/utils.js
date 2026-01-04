@@ -13,15 +13,15 @@
  */
 function slice(array, start, end) {
   if (!array) return [];
-  
+
   if (typeof array === 'string') {
     return end ? array.slice(start, end) : array.slice(start);
   }
-  
+
   if (Array.isArray(array)) {
     return end ? array.slice(start, end) : array.slice(start);
   }
-  
+
   return [];
 }
 
@@ -34,14 +34,14 @@ function slice(array, start, end) {
 function concat() {
   const args = Array.from(arguments);
   const options = args.pop(); // 最后一个参数是Handlebars的options对象
-  
+
   // 过滤掉非数组参数
-  const validArrays = args.filter(arg => Array.isArray(arg));
-  
+  const validArrays = args.filter((arg) => Array.isArray(arg));
+
   if (validArrays.length === 0) {
     return [];
   }
-  
+
   return Array.prototype.concat.apply([], validArrays);
 }
 
@@ -53,15 +53,15 @@ function concat() {
  */
 function size(value) {
   if (!value) return 0;
-  
+
   if (Array.isArray(value) || typeof value === 'string') {
     return value.length;
   }
-  
+
   if (typeof value === 'object') {
     return Object.keys(value).length;
   }
-  
+
   return 0;
 }
 
@@ -75,7 +75,7 @@ function first(array) {
   if (!array || !Array.isArray(array) || array.length === 0) {
     return undefined;
   }
-  
+
   return array[0];
 }
 
@@ -89,7 +89,7 @@ function last(array) {
   if (!array || !Array.isArray(array) || array.length === 0) {
     return undefined;
   }
-  
+
   return array[array.length - 1];
 }
 
@@ -103,19 +103,19 @@ function last(array) {
  */
 function range(start, end, step = 1) {
   const result = [];
-  
+
   if (typeof start !== 'number' || typeof end !== 'number') {
     return result;
   }
-  
+
   if (step <= 0) {
     step = 1;
   }
-  
+
   for (let i = start; i <= end; i += step) {
     result.push(i);
   }
-  
+
   return result;
 }
 
@@ -129,26 +129,26 @@ function range(start, end, step = 1) {
 function pick() {
   const args = Array.from(arguments);
   const options = args.pop(); // 最后一个参数是Handlebars的options对象
-  
+
   if (args.length < 1) {
     return {};
   }
-  
+
   const obj = args[0];
   const keys = args.slice(1);
-  
+
   if (!obj || typeof obj !== 'object') {
     return {};
   }
-  
+
   const result = {};
-  
-  keys.forEach(key => {
+
+  keys.forEach((key) => {
     if (obj.hasOwnProperty(key)) {
       result[key] = obj[key];
     }
   });
-  
+
   return result;
 }
 
@@ -162,7 +162,7 @@ function keys(object) {
   if (!object || typeof object !== 'object') {
     return [];
   }
-  
+
   return Object.keys(object);
 }
 
@@ -274,15 +274,23 @@ function safeUrl(url, options) {
     options.data.root.site.security &&
     options.data.root.site.security.allowedSchemes;
 
-  const allowedSchemes = Array.isArray(allowedFromConfig) && allowedFromConfig.length > 0
-    ? allowedFromConfig
-        .map(s => String(s || '').trim().toLowerCase().replace(/:$/, ''))
-        .filter(Boolean)
-    : ['http', 'https', 'mailto', 'tel'];
+  const allowedSchemes =
+    Array.isArray(allowedFromConfig) && allowedFromConfig.length > 0
+      ? allowedFromConfig
+          .map((s) =>
+            String(s || '')
+              .trim()
+              .toLowerCase()
+              .replace(/:$/, '')
+          )
+          .filter(Boolean)
+      : ['http', 'https', 'mailto', 'tel'];
 
   try {
     const parsed = new URL(raw);
-    const scheme = String(parsed.protocol || '').toLowerCase().replace(/:$/, '');
+    const scheme = String(parsed.protocol || '')
+      .toLowerCase()
+      .replace(/:$/, '');
     if (allowedSchemes.includes(scheme)) return raw;
     console.warn(`[WARN] 已拦截不安全 URL scheme：${raw}`);
     return '#';
@@ -306,5 +314,5 @@ module.exports = {
   add,
   faviconV2Url,
   faviconFallbackUrl,
-  safeUrl
+  safeUrl,
 };
