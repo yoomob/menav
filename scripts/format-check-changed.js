@@ -2,8 +2,14 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 
-function runGit(args, cwd) {
-  return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
+function runGit(args, cwd, options = {}) {
+  const { allowFailure = false, stdio } = options;
+  try {
+    return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: stdio || 'pipe' }).trim();
+  } catch (error) {
+    if (allowFailure) return null;
+    throw error;
+  }
 }
 
 function tryReadGithubEvent(eventPath) {
@@ -38,24 +44,93 @@ function getDiffRangeFromGithubEvent(event) {
   return null;
 }
 
+function gitObjectExists(repoRoot, sha) {
+  if (!sha) return false;
+  const result = runGit(['cat-file', '-e', `${sha}^{commit}`], repoRoot, { allowFailure: true });
+  return result !== null;
+}
+
+function isShallowRepository(repoRoot) {
+  const result = runGit(['rev-parse', '--is-shallow-repository'], repoRoot, { allowFailure: true });
+  return result === 'true';
+}
+
+function tryFetchMoreHistory(repoRoot) {
+  // 仅在 CI 场景兜底：actions/checkout 若是浅克隆，可能缺少 base commit，导致 diff range 失败
+  try {
+    if (isShallowRepository(repoRoot)) {
+      execFileSync('git', ['fetch', '--prune', '--no-tags', '--unshallow'], {
+        cwd: repoRoot,
+        stdio: 'inherit',
+      });
+      return true;
+    }
+  } catch {
+    // ignore
+  }
+
+  try {
+    execFileSync('git', ['fetch', '--prune', '--no-tags', '--depth=200', 'origin'], {
+      cwd: repoRoot,
+      stdio: 'inherit',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function collectHeadChangedFiles(repoRoot) {
+  const output = runGit(
+    ['show', '--name-only', '--diff-filter=ACMR', '--pretty=format:', 'HEAD'],
+    repoRoot,
+    { allowFailure: true }
+  );
+
+  if (!output) return [];
+
+  return output
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
 function collectChangedFiles(repoRoot, range) {
   if (!range) return [];
-  const output = runGit(
-    ['diff', '--name-only', '--diff-filter=ACMR', `${range.base}..${range.head}`],
-    repoRoot
-  );
+
+  const diffArgs = ['diff', '--name-only', '--diff-filter=ACMR', `${range.base}..${range.head}`];
+
+  const baseExists = gitObjectExists(repoRoot, range.base);
+  const headExists = gitObjectExists(repoRoot, range.head);
+  if (!baseExists || !headExists) {
+    console.warn(
+      '格式检查：检测到 diff range 所需提交缺失，尝试补全 git 历史（避免浅克隆导致失败）'
+    );
+    tryFetchMoreHistory(repoRoot);
+  }
+
+  const output = runGit(diffArgs, repoRoot, { allowFailure: true });
+  if (!output) {
+    console.warn(
+      '格式检查：无法计算 revision range，回退为 HEAD 变更文件（可能仅覆盖最后一次提交）'
+    );
+    return collectHeadChangedFiles(repoRoot);
+  }
+
   return output
-    ? output
-        .split('\n')
-        .map((line) => line.trim())
-        .filter(Boolean)
-    : [];
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
 }
 
 function collectWorkingTreeChangedFiles(repoRoot) {
   const files = new Set();
-  const unstaged = runGit(['diff', '--name-only', '--diff-filter=ACMR', 'HEAD'], repoRoot);
-  const staged = runGit(['diff', '--cached', '--name-only', '--diff-filter=ACMR'], repoRoot);
+  const unstaged = runGit(['diff', '--name-only', '--diff-filter=ACMR', 'HEAD'], repoRoot, {
+    allowFailure: true,
+  });
+  const staged = runGit(['diff', '--cached', '--name-only', '--diff-filter=ACMR'], repoRoot, {
+    allowFailure: true,
+  });
 
   [unstaged, staged].forEach((block) => {
     if (!block) return;
