@@ -754,7 +754,8 @@ body .content.expanded {
     margin-bottom: 1rem;
     position: sticky;
     top: 0;
-    z-index: 10;
+    /* 搜索框必须始终位于页面内容之上，避免搜索结果卡片滚动时遮挡 */
+    z-index: 200;
 }
 
 /* 分类切换按钮 */
@@ -813,8 +814,10 @@ body .content.expanded {
 }
 
 .search-box:focus-within {
-    border-color: var(--border-color);
-    box-shadow: 0 6px 24px var(--shadow-color);
+    border-color: rgba(var(--accent-rgb), 0.55);
+    box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.28),
+        0 0 18px rgba(var(--accent-rgb), 0.18),
+        0 6px 24px var(--shadow-color);
 }
 
 .search-box::after {
@@ -2660,7 +2663,8 @@ body .content.expanded {
     display: none;
     flex-direction: column;
     align-items: center;
-    z-index: 15;
+    /* 保持在搜索框之下，避免滚动时覆盖 sticky 的搜索容器 */
+    z-index: 1;
     transform: none !important;
     /* 确保没有变换 */
     min-height: 400px;
