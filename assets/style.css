@@ -1093,7 +1093,7 @@ body .content.expanded {
 }
 
 .welcome-section h3 {
-    font-family: "Quicksand", var(--font-body, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif);
+    font-family: var(--font-body, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif);
     font-weight: 500;
     font-size: 2rem;
     margin-bottom: 1rem;

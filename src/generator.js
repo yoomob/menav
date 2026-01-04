@@ -1154,34 +1154,56 @@ function getNormalizedFontsConfig(config) {
     family: normalizeFontFamilyForCss(fonts.family),
     weight: normalizeFontWeight(fonts.weight),
     cssUrl: String(fonts.cssUrl || fonts.href || '').trim(),
+    preload: Boolean(fonts.preload),
   };
 }
 
-// 生成字体相关 <link>（包含固定的首页特殊样式字体）
+function tryGetUrlOrigin(input) {
+  const raw = String(input || '').trim();
+  if (!raw) return '';
+  try {
+    return new URL(raw).origin;
+  } catch {
+    return '';
+  }
+}
+
+function buildStylesheetLinkTag(href, preload) {
+  const safeHref = escapeHtml(href);
+  if (!preload) return `<link rel="stylesheet" href="${safeHref}">`;
+
+  return [
+    `<link rel="preload" href="${safeHref}" as="style" onload="this.onload=null;this.rel='stylesheet'">`,
+    `<noscript><link rel="stylesheet" href="${safeHref}"></noscript>`,
+  ].join('\n');
+}
+
+// 生成字体相关 <link>
 function generateFontLinks(config) {
   const fonts = getNormalizedFontsConfig(config);
   const links = [];
 
-  // 首页特殊样式字体：固定为 Quicksand（不通过配置控制）
-  links.push('<link rel="preconnect" href="https://fonts.googleapis.com">');
-  links.push('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>');
-  links.push(
-    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500&display=swap">'
-  );
-
   // 全站基础字体：按配置加载
   if (fonts.source === 'css' && fonts.cssUrl) {
-    links.push(
-      `<link rel="stylesheet" href="${escapeHtml(fonts.cssUrl)}">`
-    );
+    const origin = tryGetUrlOrigin(fonts.cssUrl);
+    if (origin) {
+      links.push(`<link rel="preconnect" href="${escapeHtml(origin)}" crossorigin>`);
+    }
+    links.push(buildStylesheetLinkTag(fonts.cssUrl, fonts.preload));
   }
 
   if (fonts.source === 'google' && fonts.family) {
+    links.push('<link rel="preconnect" href="https://fonts.googleapis.com">');
+    links.push('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>');
+
     const familyNoQuotes = fonts.family.replace(/["']/g, '').split(',')[0].trim();
     const weight = /^[1-9]00$/.test(fonts.weight) ? fonts.weight : '400';
     const familyParam = encodeURIComponent(familyNoQuotes).replace(/%20/g, '+');
     links.push(
-      `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${familyParam}:wght@${weight}&display=swap">`
+      buildStylesheetLinkTag(
+        `https://fonts.googleapis.com/css2?family=${familyParam}:wght@${weight}&display=swap`,
+        fonts.preload
+      )
     );
   }
 
@@ -1455,6 +1477,29 @@ function generateHTML(config) {
   }
 }
 
+function tryMinifyStaticAsset(srcPath, destPath, loader) {
+  let esbuild;
+  try {
+    esbuild = require('esbuild');
+  } catch {
+    return false;
+  }
+
+  try {
+    const source = fs.readFileSync(srcPath, 'utf8');
+    const result = esbuild.transformSync(source, {
+      loader,
+      minify: true,
+      charset: 'utf8',
+    });
+    fs.writeFileSync(destPath, result.code);
+    return true;
+  } catch (error) {
+    console.error(`Error minifying ${srcPath}:`, error);
+    return false;
+  }
+}
+
 // 复制静态文件
 function copyStaticFiles(config) {
     // 确保dist目录存在
@@ -1464,20 +1509,26 @@ function copyStaticFiles(config) {
 
     // 复制CSS文件
     try {
-        fs.copyFileSync('assets/style.css', 'dist/style.css');
+        if (!tryMinifyStaticAsset('assets/style.css', 'dist/style.css', 'css')) {
+          fs.copyFileSync('assets/style.css', 'dist/style.css');
+        }
     } catch (e) {
         console.error('Error copying style.css:', e);
     }
 
     try {
-      fs.copyFileSync('assets/pinyin-match.js', 'dist/pinyin-match.js');
+      if (!tryMinifyStaticAsset('assets/pinyin-match.js', 'dist/pinyin-match.js', 'js')) {
+        fs.copyFileSync('assets/pinyin-match.js', 'dist/pinyin-match.js');
+      }
     } catch (e) {
       console.error('Error copying pinyin-match.js:', e);
     }
   
     // 复制JavaScript文件
     try {
-        fs.copyFileSync('src/script.js', 'dist/script.js');
+        if (!tryMinifyStaticAsset('src/script.js', 'dist/script.js', 'js')) {
+          fs.copyFileSync('src/script.js', 'dist/script.js');
+        }
     } catch (e) {
         console.error('Error copying script.js:', e);
     }

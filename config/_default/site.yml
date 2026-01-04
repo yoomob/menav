@@ -29,6 +29,7 @@ icons:
 fonts:
   source: css
   cssUrl: "https://fontsapi.zeoseven.com/292/main/result.css"
+  preload: true # 可选：使用 preload+onload 的方式非阻塞加载字体 CSS（更利于首屏性能）
   family: LXGW WenKai
   weight: normal
 

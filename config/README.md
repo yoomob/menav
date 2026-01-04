@@ -129,7 +129,8 @@ MeNav 配置系统采用“完全替换”策略（不合并），按以下优�
 3. **字体**
    - `fonts`：单一字体配置项，用于设置全站基础字体（`body` 等）
    - 支持 `source: css | google | system`（分别表示第三方 CSS、Google Fonts、系统字体）
-   - 首页副标题（渐变发光样式）字体固定为 `Quicksand`，不通过配置项控制
+   - 可选 `fonts.preload: true`：用 `preload + onload` 的方式非阻塞加载外链字体 CSS（更利于首屏性能）
+   - 首页副标题（渐变发光样式）使用全站基础字体（跟随 `fonts` 配置）
 
 4. **顶部欢迎信息与社交链接**
    - `profile`：首页顶部欢迎信息
@@ -261,10 +262,10 @@ profile:
 fonts:
   source: css
   cssUrl: "https://fontsapi.zeoseven.com/292/main/result.css"
+  preload: true
   family: "LXGW WenKai"
   weight: normal
-
-	  
+  
 # 社交媒体链接
 social:
   - name: "GitHub"

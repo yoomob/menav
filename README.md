@@ -43,6 +43,15 @@
 <details>
 <summary>点击查看/隐藏更新日志</summary>
 
+### 2026/01/04
+
+**1. PageSpeed 首屏性能优化**
+
+- 移除首页副标题固定 Quicksand 外链字体，改为跟随全站字体
+- 字体外链 CSS 支持 `fonts.preload: true`（`preload + onload` 非阻塞加载，含 `<noscript>` 回退）
+- Font Awesome CSS 改为 `preload + onload` 非阻塞加载，降低 render-blocking 影响
+- 构建阶段压缩 `style.css` / `script.js` / `pinyin-match.js`，减少传输体积
+
 ### 2026/01/03
 
 关联 Issue：[#31](https://github.com/rbetree/menav/issues/31)
