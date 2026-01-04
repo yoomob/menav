@@ -305,6 +305,8 @@ categories:
 - `forceIconMode: favicon | manual`：强制该站点使用指定模式（不设置则跟随全局 `icons.mode`）
 - 优先级：`faviconUrl` > `forceIconMode` > 全局 `icons.mode`
 
+> 注意：用于根据站点 URL 生成 faviconV2 地址的模板 helper 已更名为 `faviconV2Url`，从而避免与站点字段 `faviconUrl` 同名冲突；自定义模板如需生成 faviconV2 地址，请使用 `{{faviconV2Url url}}`。如需强制读取站点字段 `faviconUrl`，也可使用 `{{lookup . "faviconUrl"}}`（推荐在复杂上下文中显式读取字段）。
+
 示例（与内置组件实现保持一致）：
 
 ```handlebars

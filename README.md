@@ -59,6 +59,10 @@
 - `sync-articles` 对齐 best-effort：同步失败不再以非 0 退出码阻断构建/部署
 - 版本号来源统一：`window.MeNav.version` 不再写死，自动读取构建注入版本（用于扩展/调试识别）
 
+**3. 模板图标 helper（Breaking）**
+
+- 模板 helper `faviconUrl` 更名为 `faviconV2Url`，避免与站点字段 `sites[].faviconUrl` 同名冲突；如有自定义模板调用 `{{faviconUrl url}}`，需同步改为 `{{faviconV2Url url}}`
+
 ### 2026/01/03
 
 关联 Issue：[#31](https://github.com/rbetree/menav/issues/31)

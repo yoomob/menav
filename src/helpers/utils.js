@@ -199,9 +199,9 @@ function add(a, b) {
  * @param {string} url 站点 URL
  * @param {Object} options Handlebars options 对象
  * @returns {string} favicon URL
- * @example {{faviconUrl url}}
+ * @example {{faviconV2Url url}}
  */
-function faviconUrl(url, options) {
+function faviconV2Url(url, options) {
   if (!url) return '';
 
   const region = options.data.root.icons?.region || 'com';
@@ -304,7 +304,7 @@ module.exports = {
   keys,
   encodeURIComponent: encodeURIComponentHelper,
   add,
-  faviconUrl,
+  faviconV2Url,
   faviconFallbackUrl,
   safeUrl
 };

@@ -16,6 +16,11 @@ categories:
         url: https://linux.do/    # http/https URL（favicon 模式将尝试加载站点图标）
         icon: fab fa-linux        # 手动图标：manual 模式使用；favicon 模式下作为回退
         description: 新的理想型社区 # 站点描述
+      - name: Menav
+        url: https://rbetree.github.io/menav
+        icon: fas fa-star
+        description: 个人导航站
+        faviconUrl: assets/menav.svg
       - name: Google
         url: https://www.google.com
         icon: fab fa-google
