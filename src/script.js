@@ -1104,7 +1104,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentPageId = homePageId;
   let isInitialLoad = true;
   let isSidebarOpen = false;
-  let isSearchOpen = false;
   let isLightTheme = false; // 主题状态
   let isSidebarCollapsed = false; // 侧边栏折叠状态
   let pages; // 页面元素的全局引用
@@ -1342,31 +1341,17 @@ document.addEventListener('DOMContentLoaded', () => {
     isSidebarOpen = !isSidebarOpen;
     sidebar.classList.toggle('active', isSidebarOpen);
     overlay.classList.toggle('active', isSidebarOpen);
-    if (isSearchOpen) {
-      toggleSearch();
-    }
   }
 
-  // 移动端搜索切换
+  // 移动端：搜索框常驻显示（CSS 控制），无需“搜索面板”开关；点击仅聚焦输入框
   function toggleSearch() {
-    isSearchOpen = !isSearchOpen;
-    searchContainer.classList.toggle('active', isSearchOpen);
-    overlay.classList.toggle('active', isSearchOpen);
-    if (isSearchOpen) {
-      searchInput.focus();
-      if (isSidebarOpen) {
-        toggleSidebar();
-      }
-    }
+    searchInput && searchInput.focus();
   }
 
   // 关闭所有移动端面板
   function closeAllPanels() {
     if (isSidebarOpen) {
       toggleSidebar();
-    }
-    if (isSearchOpen) {
-      toggleSearch();
     }
   }
 
@@ -1390,10 +1375,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     e.preventDefault();
 
-    if (isMobile() && !isSearchOpen) {
-      toggleSearch();
-    }
-
     searchInput && searchInput.focus();
   });
 
@@ -1409,7 +1390,6 @@ document.addEventListener('DOMContentLoaded', () => {
       searchContainer.classList.remove('active');
       overlay.classList.remove('active');
       isSidebarOpen = false;
-      isSearchOpen = false;
     } else {
       // 在移动设备下，重置侧边栏折叠状态
       sidebar.classList.remove('collapsed');
@@ -1886,10 +1866,6 @@ document.addEventListener('DOMContentLoaded', () => {
       resetSearch();
     } else if (e.key === 'Enter') {
       executeSearch(searchInput.value);
-      // 在移动设备上，执行搜索后自动关闭搜索面板
-      if (isMobile() && isSearchOpen) {
-        closeAllPanels();
-      }
     }
   });
 
