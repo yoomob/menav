@@ -2138,72 +2138,121 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Tooltip functionality for truncated text
+// Tooltip functionality for truncated text（仅桌面端/支持悬停设备启用）
 document.addEventListener('DOMContentLoaded', () => {
-  // Create tooltip element
-  const tooltip = document.createElement('div');
-  tooltip.className = 'custom-tooltip';
-  document.body.appendChild(tooltip);
+  const hoverMedia =
+    window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)');
 
-  let activeElement = null;
+  if (!hoverMedia) {
+    return;
+  }
 
-  // Show tooltip on hover
-  document.addEventListener('mouseover', (e) => {
-    const target = e.target.closest('[data-tooltip]');
-    if (target) {
-      const tooltipText = target.getAttribute('data-tooltip');
-      if (tooltipText) {
-        activeElement = target;
-        tooltip.textContent = tooltipText;
-        tooltip.classList.add('visible');
-        updateTooltipPosition(e);
+  let cleanupTooltip = null;
+
+  function enableTooltip() {
+    if (cleanupTooltip) return;
+
+    // Create tooltip element
+    const tooltip = document.createElement('div');
+    tooltip.className = 'custom-tooltip';
+    document.body.appendChild(tooltip);
+
+    let activeElement = null;
+
+    function updateTooltipPosition(e) {
+      // Position tooltip 15px below/right of cursor
+      const x = e.clientX + 15;
+      const y = e.clientY + 15;
+
+      // Boundary checks to keep inside viewport
+      const rect = tooltip.getBoundingClientRect();
+      const winWidth = window.innerWidth;
+      const winHeight = window.innerHeight;
+
+      let finalX = x;
+      let finalY = y;
+
+      // If tooltip goes off right edge
+      if (x + rect.width > winWidth) {
+        finalX = e.clientX - rect.width - 10;
       }
-    }
-  });
 
-  // Move tooltip with cursor
-  document.addEventListener('mousemove', (e) => {
-    if (activeElement) {
+      // If tooltip goes off bottom edge
+      if (y + rect.height > winHeight) {
+        finalY = e.clientY - rect.height - 10;
+      }
+
+      tooltip.style.left = finalX + 'px';
+      tooltip.style.top = finalY + 'px';
+    }
+
+    // Show tooltip on hover
+    function onMouseOver(e) {
+      const target = e.target.closest('[data-tooltip]');
+      if (!target) return;
+
+      const tooltipText = target.getAttribute('data-tooltip');
+      if (!tooltipText) return;
+
+      activeElement = target;
+      tooltip.textContent = tooltipText;
+      tooltip.classList.add('visible');
       updateTooltipPosition(e);
     }
-  });
 
-  // Hide tooltip on mouse out
-  document.addEventListener('mouseout', (e) => {
-    const target = e.target.closest('[data-tooltip]');
-    if (target && target === activeElement) {
+    // Move tooltip with cursor
+    function onMouseMove(e) {
+      if (!activeElement) return;
+      updateTooltipPosition(e);
+    }
+
+    // Hide tooltip on mouse out
+    function onMouseOut(e) {
+      const target = e.target.closest('[data-tooltip]');
+      if (!target || target !== activeElement) return;
+
       // Check if we really left the element (not just went to a child)
-      if (!target.contains(e.relatedTarget)) {
-        activeElement = null;
-        tooltip.classList.remove('visible');
-      }
-    }
-  });
+      if (target.contains(e.relatedTarget)) return;
 
-  function updateTooltipPosition(e) {
-    // Position tooltip 15px below/right of cursor
-    const x = e.clientX + 15;
-    const y = e.clientY + 15;
-
-    // Boundary checks to keep inside viewport
-    const rect = tooltip.getBoundingClientRect();
-    const winWidth = window.innerWidth;
-    const winHeight = window.innerHeight;
-
-    let finalX = x;
-    let finalY = y;
-
-    // If tooltip goes off right edge
-    if (x + rect.width > winWidth) {
-      finalX = e.clientX - rect.width - 10;
+      activeElement = null;
+      tooltip.classList.remove('visible');
     }
 
-    // If tooltip goes off bottom edge
-    if (y + rect.height > winHeight) {
-      finalY = e.clientY - rect.height - 10;
-    }
+    document.addEventListener('mouseover', onMouseOver);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseout', onMouseOut);
 
-    tooltip.style.left = finalX + 'px';
-    tooltip.style.top = finalY + 'px';
+    cleanupTooltip = () => {
+      document.removeEventListener('mouseover', onMouseOver);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseout', onMouseOut);
+
+      activeElement = null;
+      tooltip.classList.remove('visible');
+      tooltip.remove();
+    };
+  }
+
+  function disableTooltip() {
+    if (!cleanupTooltip) return;
+    cleanupTooltip();
+    cleanupTooltip = null;
+  }
+
+  function syncTooltipEnabled() {
+    if (hoverMedia.matches) {
+      enableTooltip();
+    } else {
+      disableTooltip();
+    }
+  }
+
+  syncTooltipEnabled();
+
+  // 兼容旧版 Safari：addListener/removeListener
+  if (hoverMedia.addEventListener) {
+    hoverMedia.addEventListener('change', syncTooltipEnabled);
+  } else if (hoverMedia.addListener) {
+    hoverMedia.addListener(syncTooltipEnabled);
   }
 });
