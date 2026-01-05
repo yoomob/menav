@@ -2116,8 +2116,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Tooltip functionality for truncated text（仅桌面端/支持悬停设备启用）
 document.addEventListener('DOMContentLoaded', () => {
-  const hoverMedia =
-    window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)');
+  const hoverMedia = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)');
 
   if (!hoverMedia) {
     return;
@@ -2135,31 +2134,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let activeElement = null;
 
-    function updateTooltipPosition(e) {
-      // Position tooltip 15px below/right of cursor
-      const x = e.clientX + 15;
-      const y = e.clientY + 15;
+    function updateTooltipPosition() {
+      if (!activeElement) return;
 
-      // Boundary checks to keep inside viewport
-      const rect = tooltip.getBoundingClientRect();
+      const rect = activeElement.getBoundingClientRect();
+      const tooltipRect = tooltip.getBoundingClientRect();
+      const gap = 10; // 卡片与Tooltip的间距
+
+      // 默认显示在卡片下方
+      let top = rect.bottom + gap;
+      // 水平居中对齐
+      let left = rect.left + (rect.width - tooltipRect.width) / 2;
+
       const winWidth = window.innerWidth;
       const winHeight = window.innerHeight;
 
-      let finalX = x;
-      let finalY = y;
-
-      // If tooltip goes off right edge
-      if (x + rect.width > winWidth) {
-        finalX = e.clientX - rect.width - 10;
+      // 垂直边界检查：如果下方空间不足，尝试显示在上方
+      if (top + tooltipRect.height > winHeight - gap) {
+        top = rect.top - tooltipRect.height - gap;
       }
 
-      // If tooltip goes off bottom edge
-      if (y + rect.height > winHeight) {
-        finalY = e.clientY - rect.height - 10;
+      // 水平边界检查：防止溢出屏幕左右边界
+      if (left < gap) {
+        left = gap;
+      } else if (left + tooltipRect.width > winWidth - gap) {
+        left = winWidth - tooltipRect.width - gap;
       }
 
-      tooltip.style.left = finalX + 'px';
-      tooltip.style.top = finalY + 'px';
+      tooltip.style.left = left + 'px';
+      tooltip.style.top = top + 'px';
     }
 
     // Show tooltip on hover
@@ -2173,13 +2176,8 @@ document.addEventListener('DOMContentLoaded', () => {
       activeElement = target;
       tooltip.textContent = tooltipText;
       tooltip.classList.add('visible');
-      updateTooltipPosition(e);
-    }
-
-    // Move tooltip with cursor
-    function onMouseMove(e) {
-      if (!activeElement) return;
-      updateTooltipPosition(e);
+      // 先显示元素让浏览器计算尺寸，然后立即更新位置
+      updateTooltipPosition();
     }
 
     // Hide tooltip on mouse out
@@ -2195,12 +2193,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.addEventListener('mouseover', onMouseOver);
-    document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseout', onMouseOut);
 
     cleanupTooltip = () => {
       document.removeEventListener('mouseover', onMouseOver);
-      document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseout', onMouseOut);
 
       activeElement = null;
