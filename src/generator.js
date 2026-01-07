@@ -7,6 +7,9 @@ const Handlebars = require('handlebars');
 // 导入Handlebars助手函数
 const { registerAllHelpers } = require('./helpers');
 
+// 扩展配置输出：独立静态文件（按需加载）
+const MENAV_EXTENSION_CONFIG_FILE = 'menav-config.json';
+
 // 注册Handlebars实例和辅助函数
 const handlebars = Handlebars.create();
 registerAllHelpers(handlebars);
@@ -27,11 +30,11 @@ function loadHandlebarsTemplates() {
       .filter((file) => file.endsWith('.hbs'))
       .sort()
       .forEach((file) => {
-      const layoutName = path.basename(file, '.hbs');
-      const layoutPath = path.join(layoutsDir, file);
-      const layoutContent = fs.readFileSync(layoutPath, 'utf8');
-      handlebars.registerPartial(layoutName, layoutContent);
-    });
+        const layoutName = path.basename(file, '.hbs');
+        const layoutPath = path.join(layoutsDir, file);
+        const layoutContent = fs.readFileSync(layoutPath, 'utf8');
+        handlebars.registerPartial(layoutName, layoutContent);
+      });
   } else {
     throw new Error('Layouts directory not found. Cannot proceed without layout templates.');
   }
@@ -43,11 +46,11 @@ function loadHandlebarsTemplates() {
       .filter((file) => file.endsWith('.hbs'))
       .sort()
       .forEach((file) => {
-      const componentName = path.basename(file, '.hbs');
-      const componentPath = path.join(componentsDir, file);
-      const componentContent = fs.readFileSync(componentPath, 'utf8');
-      handlebars.registerPartial(componentName, componentContent);
-    });
+        const componentName = path.basename(file, '.hbs');
+        const componentPath = path.join(componentsDir, file);
+        const componentContent = fs.readFileSync(componentPath, 'utf8');
+        handlebars.registerPartial(componentName, componentContent);
+      });
   } else {
     throw new Error('Components directory not found. Cannot proceed without component templates.');
   }
@@ -840,6 +843,68 @@ function applyRepoMetaToCategories(categories, repoMetaMap) {
 }
 
 /**
+ * 计算页面实际使用的模板名（与 renderPage 的规则保持一致）
+ * @param {string} pageId 页面ID
+ * @param {Object} config 已标准化的配置（prepareRenderData 的 renderData）
+ * @returns {string} 模板名
+ */
+function resolveTemplateNameForPage(pageId, config) {
+  if (!pageId) return 'page';
+
+  const pageConfig = config && config[pageId] ? config[pageId] : null;
+  const explicitTemplate =
+    pageConfig && typeof pageConfig.template === 'string' ? pageConfig.template.trim() : '';
+  if (explicitTemplate) return explicitTemplate;
+
+  const inferredTemplatePath = path.join(process.cwd(), 'templates', 'pages', `${pageId}.hbs`);
+  if (fs.existsSync(inferredTemplatePath)) return pageId;
+
+  return 'page';
+}
+
+/**
+ * 构建“扩展专用配置”（避免把整站配置/书签数据注入到 index.html）
+ * - 页面内仅注入必要元信息（版本/配置 URL/少量运行时参数）
+ * - 扩展如需更多信息，可按需请求 dist/menav-config.json
+ * @param {Object} renderData prepareRenderData 生成的渲染数据
+ * @returns {Object} 扩展配置对象（可直接 JSON.stringify 输出到文件）
+ */
+function buildExtensionConfig(renderData) {
+  const version =
+    (renderData && renderData._meta && renderData._meta.version) ||
+    process.env.npm_package_version ||
+    '1.0.0';
+
+  const pageTemplates = {};
+  if (Array.isArray(renderData && renderData.navigation)) {
+    renderData.navigation.forEach((navItem) => {
+      const pageId = navItem && navItem.id ? String(navItem.id).trim() : '';
+      if (!pageId) return;
+      pageTemplates[pageId] = resolveTemplateNameForPage(pageId, renderData);
+    });
+  }
+
+  const allowedSchemes =
+    renderData &&
+    renderData.site &&
+    renderData.site.security &&
+    Array.isArray(renderData.site.security.allowedSchemes)
+      ? renderData.site.security.allowedSchemes
+      : null;
+
+  return {
+    version,
+    timestamp: new Date().toISOString(),
+    icons: renderData && renderData.icons ? renderData.icons : undefined,
+    data: {
+      homePageId: renderData && renderData.homePageId ? renderData.homePageId : null,
+      pageTemplates,
+      site: allowedSchemes ? { security: { allowedSchemes } } : undefined,
+    },
+  };
+}
+
+/**
  * 准备渲染数据，添加模板所需的特殊属性
  * @param {Object} config 配置对象
  * @returns {Object} 增强的渲染数据
@@ -895,12 +960,16 @@ function prepareRenderData(config) {
     });
   }
 
-  // 添加序列化的配置数据，用于浏览器扩展（确保包含 homePageId 等处理结果）
+  // P1-7：避免把整站配置（尤其 pages/categories/sites）注入到 index.html，减少体积并明确前端暴露边界
+  // - dist/menav-config.json：扩展专用配置（按需加载）
+  // - menav-config-data：仅注入必要元信息（版本/配置 URL/少量运行时参数）
+  const extensionConfig = buildExtensionConfig(renderData);
+  renderData.extensionConfig = extensionConfig;
+  renderData.extensionConfigUrl = `./${MENAV_EXTENSION_CONFIG_FILE}`;
   renderData.configJSON = makeJsonSafeForHtmlScript(
     JSON.stringify({
-      version: process.env.npm_package_version || '1.0.0',
-      timestamp: new Date().toISOString(),
-      data: renderData, // 使用经过处理的renderData而不是原始config
+      ...extensionConfig,
+      configUrl: renderData.extensionConfigUrl,
     })
   );
 
@@ -1851,6 +1920,17 @@ function main() {
 
     // 生成HTML
     fs.writeFileSync('dist/index.html', htmlContent);
+
+    // 扩展专用配置：独立静态文件（按需加载）
+    try {
+      const extensionConfig =
+        config && config.extensionConfig ? JSON.stringify(config.extensionConfig, null, 2) : '';
+      if (extensionConfig) {
+        fs.writeFileSync(path.join('dist', MENAV_EXTENSION_CONFIG_FILE), extensionConfig);
+      }
+    } catch (error) {
+      console.error('Error writing extension config file:', error);
+    }
 
     // GitHub Pages 静态路由回退：用于支持 /<id> 形式的路径深链接
     fs.writeFileSync('dist/404.html', generate404Html(config));

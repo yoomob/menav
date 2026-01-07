@@ -207,7 +207,7 @@ icons:
 
 **1. MeNav 浏览器扩展支持接口**
 
-- 注入序列化的配置数据供扩展读取（`configJSON`）
+- 注入扩展元信息（`menav-config-data`）并输出 `dist/menav-config.json` 供扩展按需加载（避免把整站配置注入到 `index.html`）
 - 暴露 `window.MeNav` 基础能力与 DOM 数据属性，支持元素精准定位与更新
 - 为扩展推送与页面联动打通基础能力
 

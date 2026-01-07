@@ -399,9 +399,27 @@ window.MeNav = {
           window.MeNav && typeof window.MeNav.getConfig === 'function'
             ? window.MeNav.getConfig()
             : null;
-        const pageConfig = cfg && cfg.data && pageId ? cfg.data[pageId] : null;
-        if (pageConfig && pageConfig.template) {
-          templateName = String(pageConfig.template);
+        const pageTemplates =
+          cfg && cfg.data && cfg.data.pageTemplates && typeof cfg.data.pageTemplates === 'object'
+            ? cfg.data.pageTemplates
+            : null;
+
+        const templateFromMap =
+          pageTemplates && pageId && pageTemplates[pageId]
+            ? String(pageTemplates[pageId]).trim()
+            : '';
+
+        // 兼容旧版：cfg.data[pageId].template
+        const legacyPageConfig = cfg && cfg.data && pageId ? cfg.data[pageId] : null;
+        const templateFromLegacy =
+          legacyPageConfig && legacyPageConfig.template
+            ? String(legacyPageConfig.template).trim()
+            : '';
+
+        if (templateFromMap) {
+          templateName = templateFromMap;
+        } else if (templateFromLegacy) {
+          templateName = templateFromLegacy;
         }
 
         // projects 模板使用代码仓库风格卡片（与生成端 templates/components/site-card.hbs 保持一致）
