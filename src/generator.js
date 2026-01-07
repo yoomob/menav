@@ -1721,6 +1721,116 @@ function copyStaticFiles(config) {
   }
 }
 
+// 生成 GitHub Pages 的 404 回跳页：将 /<id> 形式的路径深链接转换为 /?page=<id>
+function generate404Html(config) {
+  const siteTitle =
+    config && config.site && typeof config.site.title === 'string' ? config.site.title : 'MeNav';
+  const safeTitle = escapeHtml(siteTitle);
+
+  return `<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>${safeTitle} - 页面未找到</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 40px 16px;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+          Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
+        color: #111;
+        background: #fff;
+      }
+      .container {
+        max-width: 720px;
+        margin: 0 auto;
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 22px;
+        line-height: 1.3;
+      }
+      p {
+        margin: 8px 0;
+        line-height: 1.6;
+      }
+      a {
+        color: #2563eb;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+          'Courier New', monospace;
+      }
+    </style>
+    <script>
+      (function () {
+        var l = window.location;
+        var pathname = (l && l.pathname) || '';
+        var hash = (l && l.hash) || '';
+        var search = (l && l.search) || '';
+
+        // 清理首尾 /，并分割路径段
+        var segments = pathname.replace(/^\\/+|\\/+$/g, '').split('/').filter(Boolean);
+
+        // 仅处理两种常见形态：
+        // - 用户站点：/<id>
+        // - 仓库站点：/<repo>/<id>
+        var base = '/';
+        var pageId = '';
+
+        if (segments.length === 1) {
+          pageId = segments[0];
+        } else if (segments.length === 2) {
+          base = '/' + segments[0] + '/';
+          pageId = segments[1];
+        } else {
+          return;
+        }
+
+        // 过滤明显不是“页面 id”的情况（静态资源/404 本身）
+        if (!pageId || pageId === '404.html' || pageId.indexOf('.') !== -1) return;
+
+        try {
+          pageId = decodeURIComponent(pageId);
+        } catch (e) {
+          // 保持原值
+        }
+
+        // 将原 search 附加到目标 URL（去掉可能存在的 page 参数，避免冲突）
+        var extra = '';
+        if (search && search.length > 1) {
+          try {
+            var params = new URLSearchParams(search);
+            params.delete('page');
+            var rest = params.toString();
+            if (rest) extra = '&' + rest;
+          } catch (e) {
+            // URLSearchParams 不可用时直接忽略
+          }
+        }
+
+        var target = base + '?page=' + encodeURIComponent(pageId) + extra + hash;
+        l.replace(target);
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>页面未找到</h1>
+      <p>若你访问的是“页面路径深链接”，系统将自动回跳到 <code>?page=</code> 形式的可用地址。</p>
+      <p><a href="./">返回首页</a></p>
+    </div>
+  </body>
+</html>
+`;
+}
+
 // 主函数
 function main() {
   const config = loadConfig();
@@ -1740,6 +1850,9 @@ function main() {
     // 生成HTML
     fs.writeFileSync('dist/index.html', htmlContent);
 
+    // GitHub Pages 静态路由回退：用于支持 /<id> 形式的路径深链接
+    fs.writeFileSync('dist/404.html', generate404Html(config));
+
     // 复制静态文件
     copyStaticFiles(config);
   } catch (e) {
@@ -1756,6 +1869,7 @@ if (require.main === module) {
 module.exports = {
   loadConfig,
   generateHTML,
+  generate404Html,
   copyStaticFiles,
   generateNavigation,
   generateCategories,

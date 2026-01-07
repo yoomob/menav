@@ -1886,6 +1886,172 @@ document.addEventListener('DOMContentLoaded', () => {
     const submenuItems = document.querySelectorAll('.submenu-item');
     pages = document.querySelectorAll('.page');
 
+    // 方案 A：用 ?page=<id> 作为页面深链接（兼容 GitHub Pages 静态托管）
+    const normalizeText = (value) =>
+      String(value === null || value === undefined ? '' : value).trim();
+
+    const isValidPageId = (pageId) => {
+      const id = normalizeText(pageId);
+      if (!id) return false;
+      const el = document.getElementById(id);
+      return Boolean(el && el.classList && el.classList.contains('page'));
+    };
+
+    const getRawPageIdFromUrl = () => {
+      try {
+        const url = new URL(window.location.href);
+        return normalizeText(url.searchParams.get('page'));
+      } catch (error) {
+        return '';
+      }
+    };
+
+    const getPageIdFromUrl = () => {
+      try {
+        const url = new URL(window.location.href);
+        const pageId = normalizeText(url.searchParams.get('page'));
+        return isValidPageId(pageId) ? pageId : '';
+      } catch (error) {
+        return '';
+      }
+    };
+
+    const setUrlState = (next, options = {}) => {
+      const { replace = true } = options;
+      try {
+        const url = new URL(window.location.href);
+
+        if (next && typeof next.pageId === 'string') {
+          const pageId = normalizeText(next.pageId);
+          if (pageId) {
+            url.searchParams.set('page', pageId);
+          } else {
+            url.searchParams.delete('page');
+          }
+        }
+
+        if (next && Object.prototype.hasOwnProperty.call(next, 'hash')) {
+          const hash = normalizeText(next.hash);
+          url.hash = hash ? `#${hash}` : '';
+        }
+
+        const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+        const fn = replace ? history.replaceState : history.pushState;
+        fn.call(history, null, '', nextUrl);
+      } catch (error) {
+        // 忽略 URL/History API 异常，避免影响主流程
+      }
+    };
+
+    const setActiveNavByPageId = (pageId) => {
+      const id = normalizeText(pageId);
+      let activeItem = null;
+
+      navItems.forEach((nav) => {
+        const isActive = nav.getAttribute('data-page') === id;
+        nav.classList.toggle('active', isActive);
+        if (isActive) activeItem = nav;
+      });
+
+      // 同步子菜单展开状态：只展开当前激活项
+      navItemWrappers.forEach((wrapper) => {
+        const nav = wrapper.querySelector('.nav-item');
+        if (!nav) return;
+        const hasSubmenu = Boolean(wrapper.querySelector('.submenu'));
+        const shouldExpand = hasSubmenu && nav === activeItem;
+        wrapper.classList.toggle('expanded', shouldExpand);
+      });
+    };
+
+    const escapeSelector = (value) => {
+      if (value === null || value === undefined) return '';
+      const text = String(value);
+      if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(text);
+      // 回退：尽量避免打断选择器（不追求完全覆盖所有边界字符）
+      return text.replace(/[^a-zA-Z0-9_\u00A0-\uFFFF-]/g, '\\$&');
+    };
+
+    const escapeAttrValue = (value) => {
+      if (value === null || value === undefined) return '';
+      return String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    };
+
+    const getHashFromUrl = () => {
+      const rawHash = window.location.hash ? String(window.location.hash).slice(1) : '';
+      if (!rawHash) return '';
+      try {
+        return decodeURIComponent(rawHash).trim();
+      } catch (error) {
+        return rawHash.trim();
+      }
+    };
+
+    const scrollToCategoryInPage = (pageId, options = {}) => {
+      const id = normalizeText(pageId);
+      if (!id) return false;
+
+      const targetPage = document.getElementById(id);
+      if (!targetPage) return false;
+
+      const categoryId = normalizeText(options.categoryId);
+      const categoryName = normalizeText(options.categoryName);
+
+      let targetCategory = null;
+
+      // 优先使用 slug/data-id 精准定位（解决重复命名始终命中第一个的问题）
+      if (categoryId) {
+        const escapedId = escapeSelector(categoryId);
+        targetCategory =
+          targetPage.querySelector(`#${escapedId}`) ||
+          targetPage.querySelector(
+            `[data-type="category"][data-id="${escapeAttrValue(categoryId)}"]`
+          );
+      }
+
+      // 回退：旧逻辑按文本包含匹配（兼容旧页面/旧数据）
+      if (!targetCategory && categoryName) {
+        targetCategory = Array.from(targetPage.querySelectorAll('.category h2')).find((heading) =>
+          heading.textContent.trim().includes(categoryName)
+        );
+      }
+
+      if (!targetCategory) return false;
+
+      // 优化的滚动实现：滚动到使目标分类位于视口1/4处（更靠近顶部位置）
+      try {
+        // 直接获取所需元素和属性，减少重复查询
+        const contentElement = document.querySelector('.content');
+
+        if (contentElement && contentElement.scrollHeight > contentElement.clientHeight) {
+          // 获取目标元素相对于内容区域的位置
+          const rect = targetCategory.getBoundingClientRect();
+          const containerRect = contentElement.getBoundingClientRect();
+
+          // 计算目标应该在视口中的位置（视口高度的1/4处）
+          const desiredPosition = containerRect.height / 4;
+
+          // 计算需要滚动的位置
+          const scrollPosition =
+            contentElement.scrollTop + rect.top - containerRect.top - desiredPosition;
+
+          // 执行滚动
+          contentElement.scrollTo({
+            top: scrollPosition,
+            behavior: 'smooth',
+          });
+        } else {
+          // 回退到基本滚动方式
+          targetCategory.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } catch (error) {
+        console.error('Error during scroll:', error);
+        // 回退到基本滚动方式
+        targetCategory.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      return true;
+    };
+
     // 初始化主题
     initTheme();
 
@@ -1907,8 +2073,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 立即执行初始化，不再使用requestAnimationFrame延迟
-    // 显示首页
-    showPage(homePageId);
+    // 支持 ?page=<id> 直接打开对应页面；无效时回退到首页
+    const rawPageIdFromUrl = getRawPageIdFromUrl();
+    const validatedPageIdFromUrl = getPageIdFromUrl();
+    const initialPageId = validatedPageIdFromUrl || (isValidPageId(homePageId) ? homePageId : 'home');
+
+    setActiveNavByPageId(initialPageId);
+    showPage(initialPageId);
+
+    // 当输入了不存在的 page id 时，自动纠正 URL，避免“内容回退但地址栏仍错误”
+    if (rawPageIdFromUrl && !validatedPageIdFromUrl) {
+      setUrlState({ pageId: initialPageId }, { replace: true });
+    }
+
+    // 初始深链接：支持 ?page=<id>#<categorySlug>
+    const initialHash = getHashFromUrl();
+    if (initialHash) {
+      setTimeout(() => {
+        const found = scrollToCategoryInPage(initialPageId, {
+          categoryId: initialHash,
+          categoryName: initialHash,
+        });
+
+        // hash 存在但未命中时，不做强制修正，避免误伤其他用途的 hash
+        if (!found) return;
+      }, 50);
+    }
 
     // 添加载入动画
     categories.forEach((category, index) => {
@@ -1964,7 +2154,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const pageId = item.getAttribute('data-page');
         if (pageId) {
+          const prevPageId = currentPageId;
           showPage(pageId);
+          // 切换页面时同步 URL（清空旧 hash，避免跨页残留）
+          if (normalizeText(prevPageId) !== normalizeText(pageId)) {
+            setUrlState({ pageId, hash: '' }, { replace: true });
+          }
 
           // 在移动端视图下点击导航项后自动收起侧边栏
           if (isMobile() && isSidebarOpen && !hasSubmenu) {
@@ -1984,19 +2179,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const categoryName = item.getAttribute('data-category');
         const categoryId = item.getAttribute('data-category-id');
 
-        const escapeSelector = (value) => {
-          if (value === null || value === undefined) return '';
-          const text = String(value);
-          if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(text);
-          // 回退：尽量避免打断选择器（不追求完全覆盖所有边界字符）
-          return text.replace(/[^a-zA-Z0-9_\u00A0-\uFFFF-]/g, '\\$&');
-        };
-
-        const escapeAttrValue = (value) => {
-          if (value === null || value === undefined) return '';
-          return String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-        };
-
         if (pageId) {
           // 清除所有子菜单项的激活状态
           submenuItems.forEach((subItem) => {
@@ -2013,74 +2195,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // 显示对应页面
           showPage(pageId);
+          // 先同步 page 参数并清空旧 hash，避免跨页残留；后续若找到分类再写入新的 hash
+          setUrlState({ pageId, hash: '' }, { replace: true });
 
           // 等待页面切换完成后滚动到对应分类
           setTimeout(() => {
-            // 查找目标分类元素
-            const targetPage = document.getElementById(pageId);
-            if (targetPage) {
-              let targetCategory = null;
+            const found = scrollToCategoryInPage(pageId, { categoryId, categoryName });
+            if (!found) return;
 
-              // 优先使用 slug/data-id 精准定位（解决重复命名始终命中第一个的问题）
-              if (categoryId) {
-                const escapedId = escapeSelector(categoryId);
-                targetCategory =
-                  targetPage.querySelector(`#${escapedId}`) ||
-                  targetPage.querySelector(
-                    `[data-type="category"][data-id="${escapeAttrValue(categoryId)}"]`
-                  );
-              }
-
-              // 回退：旧逻辑按文本包含匹配（兼容旧页面/旧数据）
-              if (!targetCategory && categoryName) {
-                targetCategory = Array.from(targetPage.querySelectorAll('.category h2')).find(
-                  (heading) => heading.textContent.trim().includes(categoryName)
-                );
-              }
-
-              if (targetCategory) {
-                // 由于对子菜单 click 做了 preventDefault，这里手动同步 hash（不触发浏览器默认跳转）
-                const nextHash = categoryId || categoryName;
-                if (nextHash) {
-                  try {
-                    history.replaceState(null, '', `#${nextHash}`);
-                  } catch (error) {
-                    // 忽略 history API 失败，避免影响滚动体验
-                  }
-                }
-
-                // 优化的滚动实现：滚动到使目标分类位于视口1/4处（更靠近顶部位置）
-                try {
-                  // 直接获取所需元素和属性，减少重复查询
-                  const contentElement = document.querySelector('.content');
-
-                  if (contentElement && contentElement.scrollHeight > contentElement.clientHeight) {
-                    // 获取目标元素相对于内容区域的位置
-                    const rect = targetCategory.getBoundingClientRect();
-                    const containerRect = contentElement.getBoundingClientRect();
-
-                    // 计算目标应该在视口中的位置（视口高度的1/4处）
-                    const desiredPosition = containerRect.height / 4;
-
-                    // 计算需要滚动的位置
-                    const scrollPosition =
-                      contentElement.scrollTop + rect.top - containerRect.top - desiredPosition;
-
-                    // 执行滚动
-                    contentElement.scrollTo({
-                      top: scrollPosition,
-                      behavior: 'smooth',
-                    });
-                  } else {
-                    // 回退到基本滚动方式
-                    targetCategory.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }
-                } catch (error) {
-                  console.error('Error during scroll:', error);
-                  // 回退到基本滚动方式
-                  targetCategory.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-              }
+            // 由于对子菜单 click 做了 preventDefault，这里手动同步 hash（不触发浏览器默认跳转）
+            const nextHash = normalizeText(categoryId) || normalizeText(categoryName);
+            if (nextHash) {
+              setUrlState({ pageId, hash: nextHash }, { replace: true });
             }
           }, 25); // 延迟时间
 
