@@ -23,13 +23,14 @@ function loadHandlebarsTemplates() {
   // 加载布局模板
   const layoutsDir = path.join(templatesDir, 'layouts');
   if (fs.existsSync(layoutsDir)) {
-    fs.readdirSync(layoutsDir).forEach((file) => {
-      if (file.endsWith('.hbs')) {
-        const layoutName = path.basename(file, '.hbs');
-        const layoutPath = path.join(layoutsDir, file);
-        const layoutContent = fs.readFileSync(layoutPath, 'utf8');
-        handlebars.registerPartial(layoutName, layoutContent);
-      }
+    fs.readdirSync(layoutsDir)
+      .filter((file) => file.endsWith('.hbs'))
+      .sort()
+      .forEach((file) => {
+      const layoutName = path.basename(file, '.hbs');
+      const layoutPath = path.join(layoutsDir, file);
+      const layoutContent = fs.readFileSync(layoutPath, 'utf8');
+      handlebars.registerPartial(layoutName, layoutContent);
     });
   } else {
     throw new Error('Layouts directory not found. Cannot proceed without layout templates.');
@@ -38,13 +39,14 @@ function loadHandlebarsTemplates() {
   // 加载组件模板
   const componentsDir = path.join(templatesDir, 'components');
   if (fs.existsSync(componentsDir)) {
-    fs.readdirSync(componentsDir).forEach((file) => {
-      if (file.endsWith('.hbs')) {
-        const componentName = path.basename(file, '.hbs');
-        const componentPath = path.join(componentsDir, file);
-        const componentContent = fs.readFileSync(componentPath, 'utf8');
-        handlebars.registerPartial(componentName, componentContent);
-      }
+    fs.readdirSync(componentsDir)
+      .filter((file) => file.endsWith('.hbs'))
+      .sort()
+      .forEach((file) => {
+      const componentName = path.basename(file, '.hbs');
+      const componentPath = path.join(componentsDir, file);
+      const componentContent = fs.readFileSync(componentPath, 'utf8');
+      handlebars.registerPartial(componentName, componentContent);
     });
   } else {
     throw new Error('Components directory not found. Cannot proceed without component templates.');
