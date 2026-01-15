@@ -48,18 +48,25 @@ module.exports = function initSearch(state, dom) {
 
             // 兼容不同页面/卡片样式：优先取可见文本，其次回退到 data-*（确保 projects repo 卡片也能被搜索）
             const dataTitle = card.dataset?.name || card.getAttribute('data-name') || '';
-            const dataDescription = card.dataset?.description || card.getAttribute('data-description') || '';
+            const dataDescription =
+              card.dataset?.description || card.getAttribute('data-description') || '';
 
             const titleText =
-              card.querySelector('h3')?.textContent || card.querySelector('.repo-title')?.textContent || dataTitle;
+              card.querySelector('h3')?.textContent ||
+              card.querySelector('.repo-title')?.textContent ||
+              dataTitle;
             const descriptionText =
-              card.querySelector('p')?.textContent || card.querySelector('.repo-desc')?.textContent || dataDescription;
+              card.querySelector('p')?.textContent ||
+              card.querySelector('.repo-desc')?.textContent ||
+              dataDescription;
 
             const title = String(titleText || '').toLowerCase();
             const description = String(descriptionText || '').toLowerCase();
             const url = card.href || card.getAttribute('href') || '#';
             const icon =
-              card.querySelector('i.icon-fallback')?.className || card.querySelector('i')?.className || '';
+              card.querySelector('i.icon-fallback')?.className ||
+              card.querySelector('i')?.className ||
+              '';
 
             // 将卡片信息添加到索引中
             state.searchIndex.items.push({
@@ -111,7 +118,9 @@ module.exports = function initSearch(state, dom) {
 
       // 使用更高效的搜索算法
       const matchedItems = state.searchIndex.items.filter((item) => {
-        return item.searchText.includes(searchTerm) || PinyinMatch.match(item.searchText, searchTerm);
+        return (
+          item.searchText.includes(searchTerm) || PinyinMatch.match(item.searchText, searchTerm)
+        );
       });
 
       // 按页面分组结果

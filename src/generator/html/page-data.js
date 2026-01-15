@@ -1,8 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 const { getSubmenuForNavItem, assignCategorySlugs } = require('../config');
-const { tryLoadArticlesFeedCache, buildArticlesCategoriesByPageCategories } = require('../cache/articles');
-const { tryLoadProjectsRepoCache, applyRepoMetaToCategories, buildProjectsMeta } = require('../cache/projects');
+const {
+  tryLoadArticlesFeedCache,
+  buildArticlesCategoriesByPageCategories,
+} = require('../cache/articles');
+const {
+  tryLoadProjectsRepoCache,
+  applyRepoMetaToCategories,
+  buildProjectsMeta,
+} = require('../cache/projects');
 const { getPageConfigUpdatedAtMeta } = require('../utils/pageMeta');
 
 function prepareNavigationData(pageId, config) {
@@ -32,7 +39,12 @@ function resolveTemplateName(pageId, data) {
   let templateName = explicitTemplate || pageId;
 
   if (!explicitTemplate) {
-    const inferredTemplatePath = path.join(process.cwd(), 'templates', 'pages', `${templateName}.hbs`);
+    const inferredTemplatePath = path.join(
+      process.cwd(),
+      'templates',
+      'pages',
+      `${templateName}.hbs`
+    );
     if (!fs.existsSync(inferredTemplatePath)) {
       templateName = 'page';
     }

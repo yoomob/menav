@@ -49,7 +49,8 @@ module.exports = function initRouting(state, dom, api) {
     state.pages = document.querySelectorAll('.page');
 
     // 方案 A：用 ?page=<id> 作为页面深链接（兼容 GitHub Pages 静态托管）
-    const normalizeText = (value) => String(value === null || value === undefined ? '' : value).trim();
+    const normalizeText = (value) =>
+      String(value === null || value === undefined ? '' : value).trim();
 
     const isValidPageId = (pageId) => {
       const id = normalizeText(pageId);
@@ -164,7 +165,9 @@ module.exports = function initRouting(state, dom, api) {
         const escapedId = escapeSelector(categoryId);
         targetCategory =
           targetPage.querySelector(`#${escapedId}`) ||
-          targetPage.querySelector(`[data-type="category"][data-id="${escapeAttrValue(categoryId)}"]`);
+          targetPage.querySelector(
+            `[data-type="category"][data-id="${escapeAttrValue(categoryId)}"]`
+          );
       }
 
       // 回退：旧逻辑按文本包含匹配（兼容旧页面/旧数据）
@@ -190,7 +193,8 @@ module.exports = function initRouting(state, dom, api) {
           const desiredPosition = containerRect.height / 4;
 
           // 计算需要滚动的位置
-          const scrollPosition = contentElement.scrollTop + rect.top - containerRect.top - desiredPosition;
+          const scrollPosition =
+            contentElement.scrollTop + rect.top - containerRect.top - desiredPosition;
 
           // 执行滚动
           contentElement.scrollTo({
@@ -234,7 +238,8 @@ module.exports = function initRouting(state, dom, api) {
     // 支持 ?page=<id> 直接打开对应页面；无效时回退到首页
     const rawPageIdFromUrl = getRawPageIdFromUrl();
     const validatedPageIdFromUrl = getPageIdFromUrl();
-    const initialPageId = validatedPageIdFromUrl || (isValidPageId(state.homePageId) ? state.homePageId : 'home');
+    const initialPageId =
+      validatedPageIdFromUrl || (isValidPageId(state.homePageId) ? state.homePageId : 'home');
 
     setActiveNavByPageId(initialPageId);
     showPage(initialPageId);
@@ -400,4 +405,3 @@ module.exports = function initRouting(state, dom, api) {
 
   return { showPage };
 };
-

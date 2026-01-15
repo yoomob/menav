@@ -3,14 +3,29 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
-const { loadHandlebarsTemplates, getDefaultLayoutTemplate, renderTemplate } = require('./template/engine');
+const {
+  loadHandlebarsTemplates,
+  getDefaultLayoutTemplate,
+  renderTemplate,
+} = require('./template/engine');
 const { MENAV_EXTENSION_CONFIG_FILE, loadConfig, getSubmenuForNavItem } = require('./config');
 
-const { generateNavigation, generateCategories, generateSocialLinks } = require('./html/components');
+const {
+  generateNavigation,
+  generateCategories,
+  generateSocialLinks,
+} = require('./html/components');
 const { generate404Html } = require('./html/404');
 const { generateFontLinks, generateFontCss } = require('./html/fonts');
 const { preparePageData } = require('./html/page-data');
 const { collectSitesRecursively } = require('./utils/sites');
+const {
+  BuildError,
+  ConfigError,
+  FileError,
+  TemplateError,
+  wrapAsyncError,
+} = require('./utils/errors');
 
 /**
  * 渲染单个页面
@@ -219,7 +234,10 @@ function copyStaticFiles(config) {
   if (config.site.favicon) {
     try {
       if (fs.existsSync(`assets/${config.site.favicon}`)) {
-        fs.copyFileSync(`assets/${config.site.favicon}`, `dist/${path.basename(config.site.favicon)}`);
+        fs.copyFileSync(
+          `assets/${config.site.favicon}`,
+          `dist/${path.basename(config.site.favicon)}`
+        );
       } else if (fs.existsSync(config.site.favicon)) {
         fs.copyFileSync(config.site.favicon, `dist/${path.basename(config.site.favicon)}`);
       } else {
@@ -270,20 +288,36 @@ function main() {
         stdio: 'inherit',
       });
     } catch (error) {
-      console.error('Error bundling runtime script:', error);
-      process.exit(1);
+      throw new BuildError('构建运行时脚本失败', {
+        脚本路径: 'scripts/build-runtime.js',
+        错误信息: error.message,
+      });
     }
 
     // 复制静态文件
     copyStaticFiles(config);
   } catch (e) {
-    console.error('Error in main function:', e);
-    process.exit(1);
+    // 如果是自定义错误，直接抛出，保留上下文/路径信息
+    if (
+      e instanceof ConfigError ||
+      e instanceof TemplateError ||
+      e instanceof BuildError ||
+      e instanceof FileError
+    ) {
+      throw e;
+    }
+
+    // 否则包装为 BuildError（避免直接暴露底层异常）
+    throw new BuildError('构建过程中发生错误', {
+      错误类型: e.name || 'Error',
+      错误信息: e.message || '未知错误',
+    });
   }
 }
 
 if (require.main === module) {
-  main();
+  // 使用 wrapAsyncError 包装主函数，自动处理错误
+  wrapAsyncError(main)();
 }
 
 // 导出供测试使用的函数

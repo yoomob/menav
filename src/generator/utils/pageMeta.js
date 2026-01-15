@@ -98,4 +98,3 @@ function getPageConfigUpdatedAtMeta(pageId) {
 module.exports = {
   getPageConfigUpdatedAtMeta,
 };
-

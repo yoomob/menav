@@ -2,7 +2,8 @@ const { escapeHtml } = require('../utils/html');
 
 // 生成 GitHub Pages 的 404 回跳页：将 /<id> 形式的路径深链接转换为 /?page=<id>
 function generate404Html(config) {
-  const siteTitle = config && config.site && typeof config.site.title === 'string' ? config.site.title : 'MeNav';
+  const siteTitle =
+    config && config.site && typeof config.site.title === 'string' ? config.site.title : 'MeNav';
   const safeTitle = escapeHtml(siteTitle);
 
   return `<!doctype html>

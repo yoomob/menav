@@ -14,4 +14,3 @@ function escapeHtml(unsafe) {
 module.exports = {
   escapeHtml,
 };
-

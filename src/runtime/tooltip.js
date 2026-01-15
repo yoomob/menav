@@ -112,4 +112,3 @@ document.addEventListener('DOMContentLoaded', () => {
     hoverMedia.addListener(syncTooltipEnabled);
   }
 });
-

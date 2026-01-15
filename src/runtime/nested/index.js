@@ -180,7 +180,9 @@ function registerNestedApi() {
     if (!activePage) return;
 
     const allElements = getCollapsibleNestedContainers(activePage);
-    const collapsedElements = allElements.filter((element) => element.classList.contains('collapsed'));
+    const collapsedElements = allElements.filter((element) =>
+      element.classList.contains('collapsed')
+    );
     if (allElements.length === 0) return;
 
     // 如果收起的数量 >= 总数的一半，执行展开；否则执行收起

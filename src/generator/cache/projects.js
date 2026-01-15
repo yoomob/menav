@@ -4,7 +4,9 @@ const path = require('path');
 function tryLoadProjectsRepoCache(pageId, config) {
   if (!pageId) return null;
 
-  const cacheDirFromEnv = process.env.PROJECTS_CACHE_DIR ? String(process.env.PROJECTS_CACHE_DIR) : '';
+  const cacheDirFromEnv = process.env.PROJECTS_CACHE_DIR
+    ? String(process.env.PROJECTS_CACHE_DIR)
+    : '';
   const cacheDirFromConfig =
     config && config.site && config.site.github && config.site.github.cacheDir
       ? String(config.site.github.cacheDir)
@@ -132,4 +134,3 @@ module.exports = {
   applyRepoMetaToCategories,
   buildProjectsMeta,
 };
-

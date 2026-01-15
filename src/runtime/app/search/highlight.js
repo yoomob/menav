@@ -47,7 +47,9 @@ module.exports = function highlightSearchTerm(card, searchTerm) {
 
         while ((match = regex.exec(rawText)) !== null) {
           if (match.index > lastIndex) {
-            fragment.appendChild(document.createTextNode(rawText.substring(lastIndex, match.index)));
+            fragment.appendChild(
+              document.createTextNode(rawText.substring(lastIndex, match.index))
+            );
           }
 
           const span = document.createElement('span');
@@ -87,4 +89,3 @@ module.exports = function highlightSearchTerm(card, searchTerm) {
     console.error('Error highlighting search term');
   }
 };
-

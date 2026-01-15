@@ -178,4 +178,3 @@ module.exports = function initUi(state, dom) {
     initSidebarState,
   };
 };
-

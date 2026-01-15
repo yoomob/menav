@@ -44,7 +44,8 @@ async function main() {
       logLevel: 'info',
     });
 
-    const outputs = result && result.metafile && result.metafile.outputs ? result.metafile.outputs : null;
+    const outputs =
+      result && result.metafile && result.metafile.outputs ? result.metafile.outputs : null;
     const outKey = outputs ? Object.keys(outputs).find((k) => k.endsWith('dist/script.js')) : '';
     const bytes = outKey && outputs && outputs[outKey] ? outputs[outKey].bytes : 0;
     if (bytes) {
@@ -53,10 +54,12 @@ async function main() {
       console.log('✅ runtime bundle 完成：dist/script.js');
     }
   } catch (error) {
-    console.error('❌ runtime bundle 失败（禁止回退旧产物）：', error && error.message ? error.message : error);
+    console.error(
+      '❌ runtime bundle 失败（禁止回退旧产物）：',
+      error && error.message ? error.message : error
+    );
     process.exitCode = 1;
   }
 }
 
 main();
-

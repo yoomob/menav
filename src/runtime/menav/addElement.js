@@ -17,7 +17,9 @@ module.exports = function addElement(type, parentId, data) {
       const pageEl = parent.closest('.page');
       const pageId = pageEl && pageEl.id ? String(pageEl.id).trim() : '';
       const cfg =
-        window.MeNav && typeof window.MeNav.getConfig === 'function' ? window.MeNav.getConfig() : null;
+        window.MeNav && typeof window.MeNav.getConfig === 'function'
+          ? window.MeNav.getConfig()
+          : null;
 
       let templateName = '';
 
@@ -27,12 +29,16 @@ module.exports = function addElement(type, parentId, data) {
           : null;
 
       const templateFromMap =
-        pageTemplates && pageId && pageTemplates[pageId] ? String(pageTemplates[pageId]).trim() : '';
+        pageTemplates && pageId && pageTemplates[pageId]
+          ? String(pageTemplates[pageId]).trim()
+          : '';
 
       // 兼容旧版：cfg.data[pageId].template
       const legacyPageConfig = cfg && cfg.data && pageId ? cfg.data[pageId] : null;
       const templateFromLegacy =
-        legacyPageConfig && legacyPageConfig.template ? String(legacyPageConfig.template).trim() : '';
+        legacyPageConfig && legacyPageConfig.template
+          ? String(legacyPageConfig.template).trim()
+          : '';
 
       if (templateFromMap) {
         templateName = templateFromMap;
@@ -55,16 +61,22 @@ module.exports = function addElement(type, parentId, data) {
     const siteIcon = data.icon || 'fas fa-link';
     const siteDescription = data.description || (data.url ? menavExtractDomain(data.url) : '');
     const siteFaviconUrl = data && data.faviconUrl ? String(data.faviconUrl).trim() : '';
-    const siteForceIconModeRaw = data && data.forceIconMode ? String(data.forceIconMode).trim() : '';
+    const siteForceIconModeRaw =
+      data && data.forceIconMode ? String(data.forceIconMode).trim() : '';
     const siteForceIconMode =
-      siteForceIconModeRaw === 'manual' || siteForceIconModeRaw === 'favicon' ? siteForceIconModeRaw : '';
+      siteForceIconModeRaw === 'manual' || siteForceIconModeRaw === 'favicon'
+        ? siteForceIconModeRaw
+        : '';
 
     const safeSiteUrl = menavSanitizeUrl(siteUrl, 'addElement(site).url');
     const safeSiteIcon = menavSanitizeClassList(siteIcon, 'addElement(site).icon');
 
     newSite.setAttribute('href', safeSiteUrl);
     newSite.title = siteName + (siteDescription ? ' - ' + siteDescription : '');
-    newSite.setAttribute('data-tooltip', siteName + (siteDescription ? ' - ' + siteDescription : ''));
+    newSite.setAttribute(
+      'data-tooltip',
+      siteName + (siteDescription ? ' - ' + siteDescription : '')
+    );
     if (/^https?:\/\//i.test(safeSiteUrl)) {
       newSite.target = '_blank';
       newSite.rel = 'noopener';
@@ -185,8 +197,11 @@ module.exports = function addElement(type, parentId, data) {
       // favicon 模式：优先加载 faviconUrl；否则按 url 生成
       try {
         const cfg =
-          window.MeNav && typeof window.MeNav.getConfig === 'function' ? window.MeNav.getConfig() : null;
-        const iconsMode = cfg && cfg.icons && cfg.icons.mode ? String(cfg.icons.mode).trim() : 'favicon';
+          window.MeNav && typeof window.MeNav.getConfig === 'function'
+            ? window.MeNav.getConfig()
+            : null;
+        const iconsMode =
+          cfg && cfg.icons && cfg.icons.mode ? String(cfg.icons.mode).trim() : 'favicon';
         const iconsRegion =
           cfg && cfg.icons && cfg.icons.region ? String(cfg.icons.region).trim() : 'com';
 
@@ -319,7 +334,10 @@ module.exports = function addElement(type, parentId, data) {
     // 添加内容（用 DOM API 构建，避免 innerHTML 注入）
     const titleEl = document.createElement('h2');
     const iconEl = document.createElement('i');
-    iconEl.className = menavSanitizeClassList(data.icon || 'fas fa-folder', 'addElement(category).icon');
+    iconEl.className = menavSanitizeClassList(
+      data.icon || 'fas fa-folder',
+      'addElement(category).icon'
+    );
     titleEl.appendChild(iconEl);
     titleEl.appendChild(document.createTextNode(' ' + String(data.name || '未命名分类')));
 

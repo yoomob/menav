@@ -7,11 +7,16 @@ function detectHomePageId() {
   // 1) 优先从生成端注入的配置数据读取（保持与实际导航顺序一致）
   try {
     const config =
-      window.MeNav && typeof window.MeNav.getConfig === 'function' ? window.MeNav.getConfig() : null;
+      window.MeNav && typeof window.MeNav.getConfig === 'function'
+        ? window.MeNav.getConfig()
+        : null;
     const injectedHomePageId =
       config && config.data && config.data.homePageId ? String(config.data.homePageId).trim() : '';
     if (injectedHomePageId) return injectedHomePageId;
-    const nav = config && config.data && Array.isArray(config.data.navigation) ? config.data.navigation : null;
+    const nav =
+      config && config.data && Array.isArray(config.data.navigation)
+        ? config.data.navigation
+        : null;
     const firstId = nav && nav[0] && nav[0].id ? String(nav[0].id).trim() : '';
     if (firstId) return firstId;
   } catch (error) {
@@ -109,4 +114,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initRouting(state, dom, { ui, search });
 });
-

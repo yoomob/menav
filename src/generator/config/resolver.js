@@ -27,8 +27,7 @@ function resolveTemplateNameForPage(pageId, config) {
   if (!pageId) return 'page';
 
   const pageConfig = config && config[pageId] ? config[pageId] : null;
-  const explicit =
-    pageConfig && pageConfig.template ? String(pageConfig.template).trim() : '';
+  const explicit = pageConfig && pageConfig.template ? String(pageConfig.template).trim() : '';
   if (explicit) return explicit;
 
   const candidatePath = path.join(process.cwd(), 'templates', 'pages', `${pageId}.hbs`);

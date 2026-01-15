@@ -44,7 +44,8 @@ function findDefaultElement(type, id) {
 
 // 全局 MeNav 对象 - 用于浏览器扩展
 const existing = window.MeNav && typeof window.MeNav === 'object' ? window.MeNav : {};
-const events = existing.events && typeof existing.events === 'object' ? existing.events : createMenavEvents();
+const events =
+  existing.events && typeof existing.events === 'object' ? existing.events : createMenavEvents();
 
 window.MeNav = Object.assign(existing, {
   version: menavDetectVersion(),

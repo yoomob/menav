@@ -1,8 +1,15 @@
 const fs = require('node:fs');
 const { loadModularConfig } = require('./loader');
 const { ensureConfigDefaults, validateConfig } = require('./validator');
-const { prepareRenderData, MENAV_EXTENSION_CONFIG_FILE, getSubmenuForNavItem, resolveTemplateNameForPage, buildExtensionConfig } = require('./resolver');
+const {
+  prepareRenderData,
+  MENAV_EXTENSION_CONFIG_FILE,
+  getSubmenuForNavItem,
+  resolveTemplateNameForPage,
+  buildExtensionConfig,
+} = require('./resolver');
 const { assignCategorySlugs } = require('./slugs');
+const { ConfigError } = require('../utils/errors');
 
 function loadConfig() {
   let config = {
@@ -18,16 +25,17 @@ function loadConfig() {
 
   if (hasUserModularConfig) {
     if (!fs.existsSync('config/user/site.yml')) {
-      console.error('[ERROR] 检测到 config/user/ 目录，但缺少 config/user/site.yml。');
-      console.error(
-        '[ERROR] 由于配置采用"完全替换"策略，系统不会从 config/_default/ 补齐缺失配置。'
-      );
-      console.error('[ERROR] 解决方法：先完整复制 config/_default/ 到 config/user/，再按需修改。');
-      process.exit(1);
+      throw new ConfigError('检测到 config/user/ 目录，但缺少 config/user/site.yml', [
+        '由于配置采用"完全替换"策略，系统不会从 config/_default/ 补齐缺失配置',
+        '解决方法：先完整复制 config/_default/ 到 config/user/，再按需修改',
+        '参考文档: config/README.md',
+      ]);
     }
 
     if (!fs.existsSync('config/user/pages')) {
-      console.warn('[WARN] 检测到 config/user/ 目录，但缺少 config/user/pages/。部分页面内容可能为空。');
+      console.warn(
+        '[WARN] 检测到 config/user/ 目录，但缺少 config/user/pages/。部分页面内容可能为空。'
+      );
       console.warn('[WARN] 建议：复制 config/_default/pages/ 到 config/user/pages/，再按需修改。');
     }
 
@@ -35,10 +43,11 @@ function loadConfig() {
   } else if (hasDefaultModularConfig) {
     config = loadModularConfig('config/_default');
   } else {
-    console.error('[ERROR] 未找到可用配置：缺少 config/user/ 或 config/_default/。');
-    console.error('[ERROR] 本版本已不再支持旧版单文件配置（config.yml / config.yaml）。');
-    console.error('[ERROR] 解决方法：使用模块化配置目录（建议从 config/_default/ 复制到 config/user/ 再修改）。');
-    process.exit(1);
+    throw new ConfigError('未找到可用配置：缺少 config/user/ 或 config/_default/', [
+      '本版本已不再支持旧版单文件配置（config.yml / config.yaml）',
+      '解决方法：使用模块化配置目录（建议从 config/_default/ 复制到 config/user/ 再修改）',
+      '参考文档: config/README.md',
+    ]);
   }
 
   config = ensureConfigDefaults(config);

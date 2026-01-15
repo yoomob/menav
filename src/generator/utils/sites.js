@@ -17,7 +17,8 @@ function collectSitesRecursively(node, output) {
 
   if (Array.isArray(node.subcategories))
     node.subcategories.forEach((child) => collectSitesRecursively(child, output));
-  if (Array.isArray(node.groups)) node.groups.forEach((child) => collectSitesRecursively(child, output));
+  if (Array.isArray(node.groups))
+    node.groups.forEach((child) => collectSitesRecursively(child, output));
   if (Array.isArray(node.subgroups))
     node.subgroups.forEach((child) => collectSitesRecursively(child, output));
 
@@ -32,4 +33,3 @@ module.exports = {
   normalizeUrlKey,
   collectSitesRecursively,
 };
-

@@ -107,7 +107,10 @@ module.exports = function updateElement(type, id, newData) {
     if (newData.icon) {
       const iconElement = element.querySelector('i');
       if (iconElement) {
-        iconElement.className = menavSanitizeClassList(newData.icon, 'updateElement(nav-item).icon');
+        iconElement.className = menavSanitizeClassList(
+          newData.icon,
+          'updateElement(nav-item).icon'
+        );
       }
       element.setAttribute(
         'data-icon',

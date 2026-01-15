@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
+const { FileError, wrapAsyncError } = require('./generator/utils/errors');
 
 // 书签文件夹路径 - 使用相对路径
 const BOOKMARKS_DIR = 'bookmarks';
@@ -821,8 +822,11 @@ async function main() {
 
       // 验证文件是否确实被创建
       if (!fs.existsSync(MODULAR_OUTPUT_FILE)) {
-        console.error(`[ERROR] 文件未能创建: ${MODULAR_OUTPUT_FILE}`);
-        process.exit(1);
+        throw new FileError('文件未能创建', MODULAR_OUTPUT_FILE, [
+          '检查目录权限是否正确',
+          '确认磁盘空间是否充足',
+          '尝试手动创建目录: mkdir -p config/user/pages',
+        ]);
       }
 
       console.log('[SUCCESS] 文件保存成功');
@@ -846,27 +850,33 @@ async function main() {
         console.log('[INFO] 导航配置无需更新\n');
       }
     } catch (writeError) {
-      console.error(`[ERROR] 写入文件时出错:`, writeError);
-      console.error('[ERROR] 错误堆栈:', writeError.stack);
-      process.exit(1);
+      throw new FileError('写入文件时出错', MODULAR_OUTPUT_FILE, [
+        '检查文件路径是否正确',
+        '确认目录权限是否正确',
+        `错误详情: ${writeError.message}`,
+      ]);
     }
 
     console.log('========================================');
     console.log('[SUCCESS] 书签处理完成！');
     console.log('========================================');
   } catch (error) {
-    console.error('[FATAL] 处理书签文件时发生错误:', error);
-    console.error('[ERROR] 错误堆栈:', error.stack);
-    process.exit(1);
+    // 如果是自定义错误，直接抛出
+    if (error instanceof FileError) {
+      throw error;
+    }
+    // 否则包装为 FileError
+    throw new FileError('处理书签文件时发生错误', null, [
+      '检查书签 HTML 文件格式是否正确',
+      '确认配置目录结构是否完整',
+      `错误详情: ${error.message}`,
+    ]);
   }
 }
 
 // 启动处理
 if (require.main === module) {
-  main().catch((err) => {
-    console.error('Unhandled error in bookmark processing:', err);
-    process.exit(1);
-  });
+  wrapAsyncError(main)();
 }
 
 module.exports = {
