@@ -149,8 +149,8 @@ function shouldCheckFile(filePath) {
 
   if (normalized === 'package-lock.json') return false;
 
-  // 这两个文件历史上未统一为 Prettier 风格；避免为了启用检查产生巨量格式化 diff
-  if (normalized === 'src/generator.js' || normalized === 'src/script.js') return false;
+  // 这些文件历史上未统一为 Prettier 风格；避免为了启用检查产生巨量格式化 diff
+  if (normalized === 'src/generator/main.js' || normalized === 'src/runtime/index.js') return false;
 
   // 与现有 npm scripts 的检查范围对齐：不检查 docs/ 与 templates/
   const allowedRoots = ['src/', 'scripts/', 'test/', '.github/', 'config/'];
