@@ -2,7 +2,7 @@ const nested = require('../nested');
 
 module.exports = function initRouting(state, dom, api) {
   const { ui, search } = api;
-  const { searchInput, content } = dom;
+  const { searchInput, content, sidebar } = dom;
 
   function showPage(pageId, skipSearchReset = false) {
     if (state.currentPageId === pageId && !skipSearchReset && !state.isInitialLoad) return;
@@ -51,6 +51,83 @@ module.exports = function initRouting(state, dom, api) {
     // 方案 A：用 ?page=<id> 作为页面深链接（兼容 GitHub Pages 静态托管）
     const normalizeText = (value) =>
       String(value === null || value === undefined ? '' : value).trim();
+
+    // 侧边栏子菜单面板：将“当前页面的分类列表”放到独立区域滚动，避免挤压“页面列表”
+    const submenuPanel = document.querySelector('.sidebar-submenu-panel');
+    const submenuByPageId = new Map();
+    let submenuPanelPageId = '';
+
+    navItemWrappers.forEach((wrapper) => {
+      const nav = wrapper.querySelector('.nav-item');
+      const pageId = nav ? normalizeText(nav.getAttribute('data-page')) : '';
+      const submenu = wrapper.querySelector('.submenu');
+      if (!pageId || !submenu) return;
+      submenuByPageId.set(pageId, { wrapper, submenu });
+    });
+
+    const isSidebarCollapsed = () => Boolean(sidebar && sidebar.classList.contains('collapsed'));
+
+    const clearSubmenuPanel = () => {
+      if (!submenuPanel) return;
+
+      const pageId = normalizeText(submenuPanelPageId);
+      if (pageId) {
+        const entry = submenuByPageId.get(pageId);
+        if (entry && entry.wrapper && entry.submenu) {
+          entry.wrapper.appendChild(entry.submenu);
+        }
+      }
+
+      submenuPanel.textContent = '';
+      submenuPanelPageId = '';
+    };
+
+    const renderSubmenuPanelForPage = (pageId) => {
+      if (!submenuPanel) return;
+
+      const id = normalizeText(pageId);
+      if (!id) {
+        clearSubmenuPanel();
+        return;
+      }
+
+      // 折叠态：子菜单使用 hover 弹出，不使用面板
+      if (isSidebarCollapsed()) {
+        clearSubmenuPanel();
+        return;
+      }
+
+      const entry = submenuByPageId.get(id);
+      if (!entry || !entry.wrapper || !entry.submenu) {
+        clearSubmenuPanel();
+        return;
+      }
+
+      // 仅当 wrapper 处于 expanded 时展示（与 UI 行为保持一致）
+      if (!entry.wrapper.classList.contains('expanded')) {
+        clearSubmenuPanel();
+        return;
+      }
+
+      if (normalizeText(submenuPanelPageId) === id && submenuPanel.contains(entry.submenu)) {
+        return;
+      }
+
+      clearSubmenuPanel();
+      submenuPanel.appendChild(entry.submenu);
+      submenuPanelPageId = id;
+    };
+
+    // 监听侧边栏折叠状态变化：折叠时归还子菜单；展开时渲染当前页子菜单
+    if (sidebar && typeof MutationObserver === 'function') {
+      const observer = new MutationObserver(() => {
+        const activeNav = document.querySelector('.nav-item.active');
+        const activePageId = activeNav ? normalizeText(activeNav.getAttribute('data-page')) : '';
+        renderSubmenuPanelForPage(activePageId);
+      });
+
+      observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+    }
 
     const isValidPageId = (pageId) => {
       const id = normalizeText(pageId);
@@ -119,10 +196,13 @@ module.exports = function initRouting(state, dom, api) {
       navItemWrappers.forEach((wrapper) => {
         const nav = wrapper.querySelector('.nav-item');
         if (!nav) return;
-        const hasSubmenu = Boolean(wrapper.querySelector('.submenu'));
+        const pageId = normalizeText(nav.getAttribute('data-page'));
+        const hasSubmenu = pageId ? submenuByPageId.has(pageId) : false;
         const shouldExpand = hasSubmenu && nav === activeItem;
         wrapper.classList.toggle('expanded', shouldExpand);
       });
+
+      renderSubmenuPanelForPage(id);
     };
 
     const escapeSelector = (value) => {
@@ -270,17 +350,6 @@ module.exports = function initRouting(state, dom, api) {
       }, index * 100);
     });
 
-    // 初始展开当前页面的子菜单：高亮项如果有子菜单，需要同步展开
-    document.querySelectorAll('.nav-item.active').forEach((activeItem) => {
-      const activeWrapper = activeItem.closest('.nav-item-wrapper');
-      if (!activeWrapper) return;
-
-      const hasSubmenu = activeWrapper.querySelector('.submenu');
-      if (hasSubmenu) {
-        activeWrapper.classList.add('expanded');
-      }
-    });
-
     // 导航项点击效果
     navItems.forEach((item) => {
       item.addEventListener('click', (e) => {
@@ -290,45 +359,31 @@ module.exports = function initRouting(state, dom, api) {
 
         // 获取当前项的父级 wrapper
         const wrapper = item.closest('.nav-item-wrapper');
-        const hasSubmenu = wrapper && wrapper.querySelector('.submenu');
+        const pageId = normalizeText(item.getAttribute('data-page'));
+        const hasSubmenu = Boolean(wrapper && pageId && submenuByPageId.has(pageId));
+
+        if (!pageId) return;
 
         // 处理子菜单展开/折叠
-        if (hasSubmenu) {
-          // 如果点击的导航项已经激活且有子菜单，则切换子菜单展开状态
-          if (item.classList.contains('active')) {
-            wrapper.classList.toggle('expanded');
-          } else {
-            // 关闭所有已展开的子菜单
-            navItemWrappers.forEach((navWrapper) => {
-              if (navWrapper !== wrapper) {
-                navWrapper.classList.remove('expanded');
-              }
-            });
-
-            // 展开当前子菜单
-            wrapper.classList.add('expanded');
-          }
+        if (hasSubmenu && item.classList.contains('active')) {
+          // 当前页：保持子菜单展开状态，不做任何操作
+          return;
+        } else {
+          // 切换页面：统一由 setActiveNavByPageId 管理 active/expanded
+          setActiveNavByPageId(pageId);
         }
 
-        // 激活导航项
-        navItems.forEach((nav) => {
-          nav.classList.toggle('active', nav === item);
-        });
+        const prevPageId = state.currentPageId;
+        showPage(pageId);
 
-        const pageId = item.getAttribute('data-page');
-        if (pageId) {
-          const prevPageId = state.currentPageId;
-          showPage(pageId);
+        // 切换页面时同步 URL（清空旧 hash，避免跨页残留）
+        if (normalizeText(prevPageId) !== normalizeText(pageId)) {
+          setUrlState({ pageId, hash: '' }, { replace: true });
+        }
 
-          // 切换页面时同步 URL（清空旧 hash，避免跨页残留）
-          if (normalizeText(prevPageId) !== normalizeText(pageId)) {
-            setUrlState({ pageId, hash: '' }, { replace: true });
-          }
-
-          // 在移动端视图下点击导航项后自动收起侧边栏
-          if (ui.isMobile() && state.isSidebarOpen && !hasSubmenu) {
-            ui.closeAllPanels();
-          }
+        // 在移动端视图下点击导航项后自动收起侧边栏
+        if (ui.isMobile() && state.isSidebarOpen && !hasSubmenu) {
+          ui.closeAllPanels();
         }
       });
     });
@@ -352,10 +407,8 @@ module.exports = function initRouting(state, dom, api) {
           // 激活当前子菜单项
           item.classList.add('active');
 
-          // 激活相应的导航项
-          navItems.forEach((nav) => {
-            nav.classList.toggle('active', nav.getAttribute('data-page') === pageId);
-          });
+          // 激活导航项并同步子菜单展开状态
+          setActiveNavByPageId(pageId);
 
           // 显示对应页面
           showPage(pageId);
