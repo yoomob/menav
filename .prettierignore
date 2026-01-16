@@ -23,3 +23,7 @@ package-lock.json
 # 临时文件
 *.tmp
 *.temp
+
+# 文档文件（保留排版灵活性，避免代码示例被格式化）
+**/README.md
+src/**/*.md
