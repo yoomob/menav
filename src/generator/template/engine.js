@@ -3,6 +3,9 @@ const path = require('node:path');
 const Handlebars = require('handlebars');
 
 const { registerAllHelpers } = require('../../helpers');
+const { createLogger, isVerbose } = require('../utils/logger');
+
+const log = createLogger('template');
 
 const handlebars = Handlebars.create();
 registerAllHelpers(handlebars);
@@ -82,7 +85,11 @@ function renderTemplate(templateName, data, useLayout = true) {
       );
     }
 
-    console.log(`模板 ${templateName}.hbs 不存在，使用通用模板 page.hbs 代替`);
+    if (isVerbose()) {
+      log.info('页面模板不存在，已回退到通用模板 page.hbs', { template: `${templateName}.hbs` });
+    } else {
+      log.warn('页面模板不存在，已回退到通用模板 page.hbs', { template: `${templateName}.hbs` });
+    }
     const genericTemplateContent = fs.readFileSync(genericTemplatePath, 'utf8');
     const genericTemplate = handlebars.compile(genericTemplateContent);
 

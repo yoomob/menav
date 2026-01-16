@@ -2,8 +2,18 @@ const fs = require('node:fs');
 const path = require('node:path');
 const yaml = require('js-yaml');
 
+const { createLogger, isVerbose } = require('../utils/logger');
+
+const log = createLogger('config');
+
 function handleConfigLoadError(filePath, error) {
-  console.error(`Error loading configuration from ${filePath}:`, error);
+  log.error('加载配置失败', {
+    path: filePath,
+    message: error && error.message ? error.message : String(error),
+  });
+  if (isVerbose() && error && error.stack) {
+    console.error(error.stack);
+  }
 }
 
 function safeLoadYamlConfig(filePath) {
@@ -20,9 +30,7 @@ function safeLoadYamlConfig(filePath) {
     }
 
     if (docs.length > 1) {
-      console.warn(
-        `Warning: Multiple documents found in ${filePath}. Using the first document only.`
-      );
+      log.warn('检测到 YAML 多文档，仅使用第一个', { path: filePath });
       return docs[0];
     }
 
@@ -59,7 +67,7 @@ function loadModularConfig(dirPath) {
 
     if (siteConfig.navigation) {
       config.navigation = siteConfig.navigation;
-      console.log('使用 site.yml 中的导航配置');
+      if (isVerbose()) log.info('使用 site.yml 中的 navigation 配置');
     }
   }
 

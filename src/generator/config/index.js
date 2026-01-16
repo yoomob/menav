@@ -10,6 +10,9 @@ const {
 } = require('./resolver');
 const { assignCategorySlugs } = require('./slugs');
 const { ConfigError } = require('../utils/errors');
+const { createLogger } = require('../utils/logger');
+
+const log = createLogger('config');
 
 function loadConfig() {
   let config = {
@@ -33,10 +36,8 @@ function loadConfig() {
     }
 
     if (!fs.existsSync('config/user/pages')) {
-      console.warn(
-        '[WARN] 检测到 config/user/ 目录，但缺少 config/user/pages/。部分页面内容可能为空。'
-      );
-      console.warn('[WARN] 建议：复制 config/_default/pages/ 到 config/user/pages/，再按需修改。');
+      log.warn('检测到 config/user/pages/ 缺失，部分页面内容可能为空');
+      log.warn('建议复制 config/_default/pages/ 到 config/user/pages/，再按需修改');
     }
 
     config = loadModularConfig('config/user');

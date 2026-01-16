@@ -77,7 +77,8 @@ function ensureConfigDefaults(config) {
 
 function validateConfig(config) {
   if (!config || typeof config !== 'object') {
-    console.error('配置无效: 配置必须是一个对象');
+    const { createLogger } = require('../utils/logger');
+    createLogger('config').error('配置无效：配置必须是对象');
     return false;
   }
 

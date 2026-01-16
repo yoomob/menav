@@ -26,6 +26,7 @@ const {
   TemplateError,
   wrapAsyncError,
 } = require('./utils/errors');
+const { createLogger, isVerbose, startTimer } = require('./utils/logger');
 
 /**
  * 渲染单个页面
@@ -120,7 +121,6 @@ function generateHTML(config) {
     // 渲染模板
     return layoutTemplate(layoutData);
   } catch (error) {
-    console.error('Error rendering main HTML template:', error);
     throw error;
   }
 }
@@ -143,13 +143,20 @@ function tryMinifyStaticAsset(srcPath, destPath, loader) {
     fs.writeFileSync(destPath, result.code);
     return true;
   } catch (error) {
-    console.error(`Error minifying ${srcPath}:`, error);
+    const log = createLogger('assets');
+    log.warn('压缩静态资源失败，已降级为原文件', {
+      path: srcPath,
+      message: error && error.message ? error.message : String(error),
+    });
+    if (isVerbose() && error && error.stack) console.error(error.stack);
     return false;
   }
 }
 
 // 复制静态文件
 function copyStaticFiles(config) {
+  const log = createLogger('assets');
+
   // 确保 dist 目录存在
   if (!fs.existsSync('dist')) {
     fs.mkdirSync('dist', { recursive: true });
@@ -161,7 +168,8 @@ function copyStaticFiles(config) {
       fs.copyFileSync('assets/style.css', 'dist/style.css');
     }
   } catch (e) {
-    console.error('Error copying style.css:', e);
+    log.error('复制 style.css 失败', { message: e && e.message ? e.message : String(e) });
+    if (isVerbose() && e && e.stack) console.error(e.stack);
   }
 
   try {
@@ -169,7 +177,8 @@ function copyStaticFiles(config) {
       fs.copyFileSync('assets/pinyin-match.js', 'dist/pinyin-match.js');
     }
   } catch (e) {
-    console.error('Error copying pinyin-match.js:', e);
+    log.error('复制 pinyin-match.js 失败', { message: e && e.message ? e.message : String(e) });
+    if (isVerbose() && e && e.stack) console.error(e.stack);
   }
 
   // dist/script.js 由构建阶段 runtime bundle 产出（scripts/build-runtime.js），这里不再复制/覆盖
@@ -194,7 +203,7 @@ function copyStaticFiles(config) {
       const srcPath = path.join(process.cwd(), normalized);
       const destPath = path.join(process.cwd(), 'dist', normalized);
       if (!fs.existsSync(srcPath)) {
-        console.warn(`[WARN] faviconUrl 本地文件不存在：${normalized}`);
+        log.warn('faviconUrl 本地文件不存在', { path: normalized });
         return;
       }
 
@@ -227,7 +236,8 @@ function copyStaticFiles(config) {
       });
     }
   } catch (e) {
-    console.error('Error copying faviconUrl assets:', e);
+    log.error('复制 faviconUrl 本地资源失败', { message: e && e.message ? e.message : String(e) });
+    if (isVerbose() && e && e.stack) console.error(e.stack);
   }
 
   // 如果配置了 favicon，确保文件存在并复制
@@ -241,16 +251,29 @@ function copyStaticFiles(config) {
       } else if (fs.existsSync(config.site.favicon)) {
         fs.copyFileSync(config.site.favicon, `dist/${path.basename(config.site.favicon)}`);
       } else {
-        console.warn(`Warning: Favicon file not found: ${config.site.favicon}`);
+        log.warn('favicon 文件不存在', { path: config.site.favicon });
       }
     } catch (e) {
-      console.error('Error copying favicon:', e);
+      log.error('复制 favicon 失败', { message: e && e.message ? e.message : String(e) });
+      if (isVerbose() && e && e.stack) console.error(e.stack);
     }
   }
 }
 
 // 主函数
 function main() {
+  const cmdLog = createLogger('generate');
+  const configLog = createLogger('config');
+  const renderLog = createLogger('render');
+  const elapsedMs = startTimer();
+
+  cmdLog.info('开始', { version: process.env.npm_package_version });
+
+  let source = 'unknown';
+  if (fs.existsSync('config/user')) source = 'config/user';
+  else if (fs.existsSync('config/_default')) source = 'config/_default';
+  configLog.info('加载模块化配置', { source });
+
   const config = loadConfig();
 
   try {
@@ -258,6 +281,10 @@ function main() {
     if (!fs.existsSync('dist')) {
       fs.mkdirSync('dist', { recursive: true });
     }
+
+    renderLog.info('生成页面', {
+      pages: Array.isArray(config.navigation) ? config.navigation.length : 0,
+    });
 
     // 初始化 Handlebars 模板系统
     loadHandlebarsTemplates();
@@ -276,7 +303,10 @@ function main() {
         fs.writeFileSync(path.join('dist', MENAV_EXTENSION_CONFIG_FILE), extensionConfig);
       }
     } catch (error) {
-      console.error('Error writing extension config file:', error);
+      cmdLog.warn('写入扩展配置文件失败（不影响页面渲染）', {
+        message: error && error.message ? error.message : String(error),
+      });
+      if (isVerbose() && error && error.stack) console.error(error.stack);
     }
 
     // GitHub Pages 静态路由回退：用于支持 /<id> 形式的路径深链接
@@ -296,6 +326,8 @@ function main() {
 
     // 复制静态文件
     copyStaticFiles(config);
+
+    cmdLog.ok('完成', { ms: elapsedMs(), dist: 'dist/' });
   } catch (e) {
     // 如果是自定义错误，直接抛出，保留上下文/路径信息
     if (

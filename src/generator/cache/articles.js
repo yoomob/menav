@@ -2,6 +2,9 @@ const fs = require('fs');
 const path = require('path');
 
 const { collectSitesRecursively, normalizeUrlKey } = require('../utils/sites');
+const { createLogger } = require('../utils/logger');
+
+const log = createLogger('cache:articles');
 
 /**
  * 读取 articles 页面 RSS 缓存（Phase 2）
@@ -68,7 +71,7 @@ function tryLoadArticlesFeedCache(pageId, config) {
       },
     };
   } catch (e) {
-    console.warn(`[WARN] articles 缓存读取失败：${cachePath}（将回退 Phase 1）`);
+    log.warn('articles 缓存读取失败，将回退 Phase 1', { path: cachePath });
     return null;
   }
 }

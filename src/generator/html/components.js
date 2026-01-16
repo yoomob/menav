@@ -4,6 +4,9 @@ const path = require('path');
 const { handlebars } = require('../template/engine');
 const { getSubmenuForNavItem } = require('../config');
 const { escapeHtml } = require('../utils/html');
+const { createLogger, isVerbose } = require('../utils/logger');
+
+const log = createLogger('render');
 
 // 生成导航菜单
 function generateNavigation(navigation, config) {
@@ -104,7 +107,10 @@ function generateSocialLinks(social) {
       return template(social); // 社交链接模板直接接收数组
     }
   } catch (error) {
-    console.error('Error rendering social-links template:', error);
+    log.warn('渲染 social-links 模板失败，已回退到内置渲染', {
+      message: error && error.message ? error.message : String(error),
+    });
+    if (isVerbose() && error && error.stack) console.error(error.stack);
     // 出错时回退到原始生成方法
   }
 
@@ -124,7 +130,7 @@ function generateSocialLinks(social) {
 function generatePageContent(pageId, data) {
   // 确保数据对象存在
   if (!data) {
-    console.error(`Missing data for page: ${pageId}`);
+    log.warn('页面数据缺失，已回退为占位页面', { page: pageId });
     return `
                 <div class="welcome-section">
                     <div class="welcome-section-main">

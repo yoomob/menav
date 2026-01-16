@@ -49,38 +49,42 @@ class FileError extends Error {
  * @param {number} exitCode - 退出码，默认为 1
  */
 function handleError(error, exitCode = 1) {
+  const { formatPrefix, isVerbose } = require('./logger');
+
   // 错误标题行
-  console.error(`\n✖ ${error.name}: ${error.message}`);
+  console.error(`\n${formatPrefix('ERROR')} ${error.name}: ${error.message}`);
 
   // 文件路径（如果有）
   if (error.filePath || error.templatePath) {
     const path = error.filePath || error.templatePath;
-    console.error(`  位置: ${path}`);
+    console.error(`位置: ${path}`);
   }
 
   // 上下文信息（如果有）
   if (error.context && Object.keys(error.context).length > 0) {
-    console.error('│');
+    console.error('上下文:');
     for (const [key, value] of Object.entries(error.context)) {
-      console.error(`│ ${key}: ${value}`);
+      console.error(`  ${key}: ${value}`);
     }
   }
 
   // 修复建议（如果有）
   if (error.suggestions && error.suggestions.length > 0) {
-    console.error('│');
-    console.error('➜ 解决方案:');
+    console.error('建议:');
     error.suggestions.forEach((suggestion, index) => {
-      console.error(`  ${index + 1}. ${suggestion}`);
+      console.error(`  ${index + 1}) ${suggestion}`);
     });
   }
 
   // DEBUG 提示（仅在非 DEBUG 模式下显示）
   if (process.env.DEBUG) {
-    console.error('\n堆栈跟踪:');
+    console.error('\n堆栈:');
+    console.error(error.stack || String(error));
+  } else if (isVerbose() && error && error.stack) {
+    console.error('\n堆栈:');
     console.error(error.stack);
   } else {
-    console.error('\n（设置 DEBUG=1 查看堆栈跟踪）');
+    console.error('\n提示: DEBUG=1 查看堆栈');
   }
 
   console.error(); // 空行结束

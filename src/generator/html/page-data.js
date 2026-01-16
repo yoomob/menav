@@ -11,10 +11,13 @@ const {
   buildProjectsMeta,
 } = require('../cache/projects');
 const { getPageConfigUpdatedAtMeta } = require('../utils/pageMeta');
+const { createLogger, isVerbose } = require('../utils/logger');
+
+const log = createLogger('render');
 
 function prepareNavigationData(pageId, config) {
   if (!Array.isArray(config.navigation)) {
-    console.warn('Warning: config.navigation is not an array in renderPage. Using empty array.');
+    log.warn('config.navigation 不是数组，已降级为空数组');
     return [];
   }
 
@@ -162,7 +165,7 @@ function preparePageData(pageId, config) {
   }
 
   if (config[pageId] && config[pageId].template) {
-    console.log(`页面 ${pageId} 使用指定模板: ${templateName}`);
+    if (isVerbose()) log.info(`页面 ${pageId} 使用指定模板`, { template: templateName });
   }
 
   return { data, templateName };

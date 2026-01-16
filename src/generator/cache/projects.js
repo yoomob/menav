@@ -1,6 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
+const { createLogger } = require('../utils/logger');
+
+const log = createLogger('cache:projects');
+
 function tryLoadProjectsRepoCache(pageId, config) {
   if (!pageId) return null;
 
@@ -43,7 +47,7 @@ function tryLoadProjectsRepoCache(pageId, config) {
       },
     };
   } catch (e) {
-    console.warn(`[WARN] projects 缓存读取失败：${cachePath}（将仅展示标题与描述）`);
+    log.warn('projects 缓存读取失败，将仅展示标题与描述', { path: cachePath });
     return null;
   }
 }

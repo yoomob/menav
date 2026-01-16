@@ -1,6 +1,10 @@
 const path = require('node:path');
 const fs = require('node:fs');
 
+const { createLogger, isVerbose, startTimer } = require('../src/generator/utils/logger');
+
+const log = createLogger('bundle');
+
 function ensureDir(dirPath) {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
@@ -12,7 +16,7 @@ async function main() {
   try {
     esbuild = require('esbuild');
   } catch (error) {
-    console.error('未找到 esbuild，请先执行 npm install。');
+    log.error('未找到 esbuild，请先执行 npm install。');
     process.exitCode = 1;
     return;
   }
@@ -22,7 +26,7 @@ async function main() {
   const outFile = path.join(projectRoot, 'dist', 'script.js');
 
   if (!fs.existsSync(entry)) {
-    console.error(`运行时入口不存在：${path.relative(projectRoot, entry)}`);
+    log.error('运行时入口不存在', { path: path.relative(projectRoot, entry) });
     process.exitCode = 1;
     return;
   }
@@ -30,6 +34,7 @@ async function main() {
   ensureDir(path.dirname(outFile));
 
   try {
+    const elapsedMs = startTimer();
     const result = await esbuild.build({
       entryPoints: [entry],
       outfile: outFile,
@@ -41,23 +46,25 @@ async function main() {
       minify: true,
       legalComments: 'none',
       metafile: true,
-      logLevel: 'info',
+      logLevel: 'silent',
     });
 
+    const ms = elapsedMs();
     const outputs =
       result && result.metafile && result.metafile.outputs ? result.metafile.outputs : null;
     const outKey = outputs ? Object.keys(outputs).find((k) => k.endsWith('dist/script.js')) : '';
     const bytes = outKey && outputs && outputs[outKey] ? outputs[outKey].bytes : 0;
-    if (bytes) {
-      console.log(`✅ runtime bundle 完成：dist/script.js (${bytes} bytes)`);
-    } else {
-      console.log('✅ runtime bundle 完成：dist/script.js');
-    }
+
+    const meta = { ms };
+    if (bytes) meta.bytes = bytes;
+    log.ok('输出 dist/script.js', meta);
   } catch (error) {
-    console.error(
-      '❌ runtime bundle 失败（禁止回退旧产物）：',
-      error && error.message ? error.message : error
-    );
+    log.error('构建 dist/script.js 失败', {
+      message: error && error.message ? error.message : String(error),
+    });
+    if (isVerbose() && error && error.stack) {
+      console.error(error.stack);
+    }
     process.exitCode = 1;
   }
 }
