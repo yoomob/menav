@@ -170,13 +170,33 @@ async function main() {
 
   log.ok('就绪', { url: `http://localhost:${actualPort}` });
 
-  const shutdown = () => {
-    log.info('正在关闭...');
-    server.close(() => process.exit(0));
+  let shuttingDown = false;
+  const shutdown = (signal) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+
+    process.stdout.write('\n');
+    log.info('正在关闭...', { signal });
+
+    try {
+      if (typeof server.closeIdleConnections === 'function') server.closeIdleConnections();
+      if (typeof server.closeAllConnections === 'function') server.closeAllConnections();
+    } catch {
+      // ignore
+    }
+
+    const exit = signal === 'SIGINT' ? 130 : 0;
+    const forceTimer = setTimeout(() => process.exit(exit), 2000);
+    if (typeof forceTimer.unref === 'function') forceTimer.unref();
+
+    server.close(() => {
+      clearTimeout(forceTimer);
+      process.exit(exit);
+    });
   };
 
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
+  process.once('SIGINT', () => shutdown('SIGINT'));
+  process.once('SIGTERM', () => shutdown('SIGTERM'));
 }
 
 if (require.main === module) {
