@@ -240,12 +240,13 @@ module.exports = function addElement(type, parentId, data) {
             if (urlToUse) {
               // 根据 icons.region 配置决定优先使用哪个域名
               const urls = [];
+              // drop_404_icon=true：缺失 favicon 时返回空 404，避免占位图导致 onerror 不触发，从而可靠走回退逻辑
               const comUrl = `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(
                 urlToUse
-              )}&size=32`;
+              )}&size=32&drop_404_icon=true`;
               const cnUrl = `https://t3.gstatic.cn/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(
                 urlToUse
-              )}&size=32`;
+              )}&size=32&drop_404_icon=true`;
               if (iconsRegion === 'cn') {
                 urls.push(cnUrl, comUrl);
               } else {
