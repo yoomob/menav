@@ -137,18 +137,23 @@ MeNav 配置系统采用“完全替换”策略（不合并），按以下优�
    - 可选 `fonts.preload: true`：用 `preload + onload` 的方式非阻塞加载外链字体 CSS（更利于首屏性能）
    - 首页副标题（渐变发光样式）使用全站基础字体（跟随 `fonts` 配置）
 
-5. **顶部欢迎信息与社交链接**
+5. **主题（默认明暗模式）**
+   - `theme.mode: dark | light | system`
+   - `dark/light`：首屏默认主题；用户点击按钮切换后会写入 localStorage 并覆盖该默认值
+   - `system`：跟随系统 `prefers-color-scheme`；用户手动切换后同样会写入 localStorage 并停止跟随
+
+6. **顶部欢迎信息与社交链接**
    - `profile`：首页顶部欢迎信息
    - `social`：侧边栏底部社交链接
    - `profile.title` / `profile.subtitle`：分别对应首页顶部主标题与副标题
 
-6. **导航**
+7. **导航**
    - `navigation[]`：页面入口列表，`id` 需唯一，并与 `pages/<id>.yml` 对应（例如 `id: common` 对应 `pages/common.yml`）
    - 默认首页由 `navigation` 数组顺序决定：**第一项即为首页（默认打开页）**，不再使用 `active` 字段
    - 图标使用 Font Awesome 类名字符串（例如 `fas fa-home`、`fab fa-github`）
    - 导航显示顺序与数组顺序一致，可通过调整数组顺序改变导航顺序
 
-7. **RSS（articles Phase 2）**
+8. **RSS（articles Phase 2）**
    - `rss.*`：仅用于 `npm run sync-articles`（联网抓取 RSS/Atom 并写入缓存）
    - `npm run build` 默认不联网；无缓存时 `articles` 页面会回退到 Phase 1 的站点入口展示
    - articles 页面会按 `articles.yml` 的分类进行聚合展示：某分类下配置的来源站点，其文章会显示在该分类下
@@ -156,7 +161,7 @@ MeNav 配置系统采用“完全替换”策略（不合并），按以下优�
    - 默认配置已将 `rss.cacheDir` 设为 `dev`（仓库默认 gitignore），避免误提交缓存文件；可按需改为自定义目录
    - GitHub Pages 部署工作流会在构建前自动执行 `npm run sync-articles`，并支持定时触发（默认每天 UTC 02:00；可在 `.github/workflows/deploy.yml` 调整）
 
-8. **GitHub（projects 热力图，可选）**
+9. **GitHub（projects 热力图，可选）**
    - `github.username`：你的 GitHub 用户名（用于 projects 页面标题栏右侧贡献热力图）
    - `github.heatmapColor`：热力图主题色（不带 `#`，例如 `339af0`）
    - `github.cacheDir`：projects 仓库元信息缓存目录（默认 `dev`，仓库默认 gitignore）

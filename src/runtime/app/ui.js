@@ -16,11 +16,72 @@ module.exports = function initUi(state, dom) {
   // 移除预加载类，允许 CSS 过渡效果
   document.documentElement.classList.remove('preload');
 
-  // 应用从 localStorage 读取的主题设置（预加载阶段已写入 class）
+  let systemThemeMql = null;
+  let systemThemeListener = null;
+
+  function setTheme(isLight) {
+    const nextIsLight = Boolean(isLight);
+    state.isLightTheme = nextIsLight;
+    document.body.classList.toggle('light-theme', nextIsLight);
+
+    if (nextIsLight) {
+      themeIcon.classList.remove('fa-moon');
+      themeIcon.classList.add('fa-sun');
+    } else {
+      themeIcon.classList.remove('fa-sun');
+      themeIcon.classList.add('fa-moon');
+    }
+  }
+
+  function stopSystemThemeFollow() {
+    if (systemThemeMql && systemThemeListener) {
+      if (typeof systemThemeMql.removeEventListener === 'function') {
+        systemThemeMql.removeEventListener('change', systemThemeListener);
+      } else if (typeof systemThemeMql.removeListener === 'function') {
+        systemThemeMql.removeListener(systemThemeListener);
+      }
+    }
+    systemThemeMql = null;
+    systemThemeListener = null;
+  }
+
+  function startSystemThemeFollow() {
+    stopSystemThemeFollow();
+
+    try {
+      systemThemeMql = window.matchMedia('(prefers-color-scheme: light)');
+    } catch (e) {
+      systemThemeMql = null;
+    }
+    if (!systemThemeMql) return;
+
+    systemThemeListener = (event) => {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        stopSystemThemeFollow();
+        return;
+      }
+      setTheme(Boolean(event && event.matches));
+    };
+
+    if (typeof systemThemeMql.addEventListener === 'function') {
+      systemThemeMql.addEventListener('change', systemThemeListener);
+    } else if (typeof systemThemeMql.addListener === 'function') {
+      systemThemeMql.addListener(systemThemeListener);
+    }
+  }
+
+  function getThemeMode() {
+    const raw = document.documentElement.getAttribute('data-theme-mode');
+    return raw ? String(raw).trim().toLowerCase() : 'dark';
+  }
+
+  // 应用预加载阶段确定的主题（localStorage / site.theme.mode）
   if (document.documentElement.classList.contains('theme-preload')) {
     document.documentElement.classList.remove('theme-preload');
-    document.body.classList.add('light-theme');
-    state.isLightTheme = true;
+    setTheme(true);
+  } else {
+    setTheme(false);
   }
 
   // 应用从 localStorage 读取的侧边栏状态（预加载阶段已写入 class）
@@ -71,37 +132,53 @@ module.exports = function initUi(state, dom) {
 
   // 主题切换功能
   function toggleTheme() {
-    state.isLightTheme = !state.isLightTheme;
-    document.body.classList.toggle('light-theme', state.isLightTheme);
+    setTheme(!state.isLightTheme);
 
-    // 更新图标
-    if (state.isLightTheme) {
-      themeIcon.classList.remove('fa-moon');
-      themeIcon.classList.add('fa-sun');
-    } else {
-      themeIcon.classList.remove('fa-sun');
-      themeIcon.classList.add('fa-moon');
-    }
-
-    // 保存主题偏好到 localStorage
+    // 用户手动切换后：写入 localStorage，并停止 system 跟随
     localStorage.setItem('theme', state.isLightTheme ? 'light' : 'dark');
+    stopSystemThemeFollow();
   }
 
   // 初始化主题 - 已在页面加载前处理，此处仅完成图标状态初始化等次要任务
   function initTheme() {
     // 从 localStorage 获取主题偏好
     const savedTheme = localStorage.getItem('theme');
-
-    // 更新图标状态以匹配当前主题
     if (savedTheme === 'light') {
-      state.isLightTheme = true;
-      themeIcon.classList.remove('fa-moon');
-      themeIcon.classList.add('fa-sun');
-    } else {
-      state.isLightTheme = false;
-      themeIcon.classList.remove('fa-sun');
-      themeIcon.classList.add('fa-moon');
+      stopSystemThemeFollow();
+      setTheme(true);
+      return;
     }
+    if (savedTheme === 'dark') {
+      stopSystemThemeFollow();
+      setTheme(false);
+      return;
+    }
+
+    // 未写入 localStorage：按 site.theme.mode 决定默认值
+    const mode = getThemeMode();
+
+    if (mode === 'light') {
+      stopSystemThemeFollow();
+      setTheme(true);
+      return;
+    }
+
+    if (mode === 'system') {
+      let shouldUseLight = false;
+      try {
+        shouldUseLight =
+          window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+      } catch (e) {
+        shouldUseLight = false;
+      }
+      setTheme(shouldUseLight);
+      startSystemThemeFollow();
+      return;
+    }
+
+    // 默认 dark
+    stopSystemThemeFollow();
+    setTheme(false);
   }
 
   // 移动端菜单切换
