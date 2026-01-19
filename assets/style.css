@@ -171,6 +171,25 @@ html.preload * {
   box-sizing: border-box;
 }
 
+/* 全局 Focus Visible 样式 */
+:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* 导航项 Focus 样式 */
+.nav-item:focus-visible,
+.submenu-item:focus-visible,
+.site-card:focus-visible,
+.theme-toggle:focus-visible,
+.category-toggle:focus-visible,
+.menu-toggle:focus-visible,
+.search-toggle:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+  z-index: 10;
+}
+
 /* 通用滚动条样式 */
 .custom-scrollbar {
   scrollbar-width: thin;
@@ -856,6 +875,16 @@ body.loaded .layout {
   text-align: center;
 }
 
+.nav-item i {
+  width: 20px;
+  text-align: center;
+}
+
+.nav-item i {
+  width: 20px;
+  text-align: center;
+}
+
 /* 折叠状态下：底部区域不可见且不可交互 */
 .sidebar.collapsed .sidebar-footer {
   visibility: hidden;
@@ -866,7 +895,7 @@ body.loaded .layout {
 .content {
   flex: 1;
   margin-left: var(--sidebar-width);
-  padding: 2rem 1.5rem;
+  padding: 1.5rem 1rem;
   background-color: var(--bg-color);
   position: relative;
   height: var(--app-height, 100vh);
@@ -1376,8 +1405,8 @@ body .content.expanded {
 .category {
   background: linear-gradient(145deg, var(--card-bg-gradient-1), var(--card-bg-gradient-2));
   border-radius: var(--radius-xl);
-  padding: var(--spacing-lg);
-  margin: 0 auto var(--spacing-lg) auto;
+  padding: 1rem;
+  margin: 0 auto 1.2rem auto;
   width: 100%;
   max-width: var(--page-max-width);
   position: relative;
@@ -1393,8 +1422,8 @@ body .content.expanded {
 /* 分类标题容器 */
 .category-header {
   border-radius: var(--radius-md);
-  padding: 0.5rem;
-  margin: -0.5rem -0.5rem 1rem -0.5rem;
+  padding: 0.4rem;
+  margin: -0.4rem -0.4rem 0.8rem -0.4rem;
   transition: all var(--transition-normal);
 }
 
@@ -1476,12 +1505,29 @@ body .content.expanded {
   margin: 0;
 }
 
+/* 嵌套层级指示线 (Hierarchy Indicator A) */
+.category-level-2::before,
+.category-level-3::before,
+.group-level-3::before,
+.category-level-4::before,
+.group-level-4::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--border-color);
+  opacity: 0.6;
+}
+
 /* 层级2: 子分类 */
 .category-level-2 {
   margin-top: 0;
   margin-bottom: 0;
-  padding-left: 0.5rem;
+  padding-left: 1rem;
   border-left: none;
+  position: relative;
 }
 
 /* 层级2: 标题样式 */
@@ -1512,7 +1558,8 @@ body .content.expanded {
 .category-level-3 {
   margin-top: 0;
   margin-bottom: 0;
-  padding-left: 0.5rem;
+  padding-left: 1rem;
+  position: relative;
 }
 
 /* 层级3: 标题样式 */
@@ -1544,7 +1591,8 @@ body .content.expanded {
 .category-level-4 {
   margin-top: 0;
   margin-bottom: 0;
-  padding-left: 0.5rem;
+  padding-left: 1rem;
+  position: relative;
 }
 
 /* 嵌套层级间距：仅在同级相邻时增加间距，避免首项被额外下推 */
@@ -1727,7 +1775,7 @@ body .content.expanded {
 .group-level-4 .sites-grid,
 .category-level-4 .sites-grid {
   margin-top: 0;
-  gap: var(--spacing-md);
+  gap: 0.75rem;
   /* 保持与顶层一致的网格布局 */
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
@@ -1735,17 +1783,17 @@ body .content.expanded {
 /* 响应式设计 - 嵌套结构 */
 @media (max-width: 768px) {
   .category-level-2 {
-    padding-left: 0;
+    padding-left: 0.75rem;
   }
 
   .group-level-3,
   .category-level-3 {
-    padding-left: 0;
+    padding-left: 0.75rem;
   }
 
   .group-level-4,
   .category-level-4 {
-    padding-left: 0;
+    padding-left: 0.75rem;
   }
 
   .subcategories-container > .category-level-2 + .category-level-2 {
@@ -1783,14 +1831,14 @@ body .content.expanded {
   .group-level-3,
   .category-level-3 {
     margin-left: 0;
-    padding-left: 0;
+    padding-left: 0.75rem;
     width: 100%;
   }
 
   .group-level-4,
   .category-level-4 {
     margin-left: 0;
-    padding-left: 0;
+    padding-left: 0.75rem;
     width: 100%;
   }
 
@@ -1808,7 +1856,7 @@ body .content.expanded {
 .sites-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--spacing-md);
+  gap: 0.75rem;
   position: relative;
   z-index: 1;
   width: 100%;
@@ -1950,7 +1998,7 @@ body .content.expanded {
     var(--site-card-bg-gradient-2)
   );
   border-radius: var(--radius-lg);
-  padding: 0.85rem 1rem;
+  padding: 0.75rem 0.9rem;
   text-decoration: none;
   color: inherit;
   transition:
@@ -1960,7 +2008,7 @@ body .content.expanded {
     border-color var(--transition-normal);
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.6rem;
   text-align: left;
   backface-visibility: hidden;
   transform: translateZ(0);
