@@ -12,6 +12,8 @@ const {
 } = require('../cache/projects');
 const { getPageConfigUpdatedAtMeta } = require('../utils/pageMeta');
 const { createLogger, isVerbose } = require('../utils/logger');
+const { ConfigError } = require('../utils/errors');
+const { renderMarkdownToHtml } = require('./markdown');
 
 const log = createLogger('render');
 
@@ -81,6 +83,48 @@ function applyBookmarksData(data, pageId) {
   if (updatedAtMeta) {
     data.pageMeta = { ...updatedAtMeta };
   }
+}
+
+function applyContentData(data, pageId, config) {
+  const content = data && data.content && typeof data.content === 'object' ? data.content : null;
+  const file = content && content.file ? String(content.file).trim() : '';
+  if (!file) {
+    throw new ConfigError(`内容页缺少 content.file：${pageId}`, [
+      `请在 config/*/pages/${pageId}.yml 中配置：`,
+      'template: content',
+      'content:',
+      '  file: path/to/file.md',
+    ]);
+  }
+
+  // 本期仅支持读取本地 markdown 文件
+  const fs = require('node:fs');
+  const path = require('node:path');
+
+  // 允许用户以相对 repo root 的路径引用（推荐约定：content/*.md）
+  // 同时允许绝对路径（便于本地调试/临时文件），但不会自动复制资源到 dist。
+  const normalized = file.replace(/\\/g, '/');
+  const absPath = path.isAbsolute(normalized)
+    ? path.normalize(normalized)
+    : path.join(process.cwd(), normalized.replace(/^\//, ''));
+  if (!fs.existsSync(absPath)) {
+    throw new ConfigError(`内容页 markdown 文件不存在：${pageId}`, [
+      `检查路径是否正确：${file}`,
+      '提示：路径相对于仓库根目录（process.cwd()）解析',
+    ]);
+  }
+
+  const markdownText = fs.readFileSync(absPath, 'utf8');
+  const allowedSchemes =
+    config &&
+    config.site &&
+    config.site.security &&
+    Array.isArray(config.site.security.allowedSchemes)
+      ? config.site.security.allowedSchemes
+      : null;
+
+  data.contentFile = normalized;
+  data.contentHtml = renderMarkdownToHtml(markdownText, { allowedSchemes });
 }
 
 function convertTopLevelSitesToCategory(data, pageId, templateName) {
@@ -156,6 +200,10 @@ function preparePageData(pageId, config) {
 
   if (templateName === 'bookmarks') {
     applyBookmarksData(data, pageId);
+  }
+
+  if (templateName === 'content') {
+    applyContentData(data, pageId, config);
   }
 
   applyHomePageTitles(data, pageId, config);

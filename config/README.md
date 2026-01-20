@@ -205,6 +205,40 @@ categories:
 
 - 若历史配置仍使用顶层 `sites`（旧结构），系统会自动映射为一个分类容器以保持页面结构一致（当前仅对 friends/articles 提供该兼容）。
 
+#### 内容页（template: content）
+
+内容页用于承载“关于 / 帮助 / 使用说明 / 更新日志 / 迁移指南 / 隐私说明”等纯文本内容。
+
+配置要点：
+
+- `template: content`
+- `content.file`：指向本地 Markdown 文件路径（推荐放在 `content/` 下）
+- Markdown 会在**构建期**渲染为 HTML（不是运行时 fetch）
+- 当前约束：
+  - 禁止 raw HTML（避免 XSS）
+  - 禁止图片（`![]()` 不会输出 `<img>`；本期不支持图片/附件）
+  - 链接会按 URL scheme 白名单策略处理：
+    - 默认允许：`http/https/mailto/tel` + 所有相对链接（`#`、`/`、`./`、`../`、`?` 开头）
+    - 其他 scheme 会被安全降级为 `#`（可用 `site.yml -> security.allowedSchemes` 显式放行）
+
+示例（以 about 页面为例）：
+
+```yml
+# config/user/pages/about.yml
+title: 关于
+subtitle: 项目说明
+template: content
+
+content:
+  file: content/about.md
+```
+
+对应内容文件：
+
+```text
+content/about.md
+```
+
 ### 多层级嵌套配置（2-4层）
 
 书签与分类支持 2~4 层嵌套，用于更好组织大量站点。建议直接参考默认示例：
