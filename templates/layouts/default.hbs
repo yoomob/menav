@@ -53,7 +53,9 @@
         })();
     </script>
     <link rel="stylesheet" href="style.css">
+  {{!-- github-calendar 已迁移为构建期抓取并注入（避免 runtime 依赖 unpkg + 代理服务） --}}
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"></noscript>
 </head>
@@ -215,6 +217,7 @@
         {{{configJSON}}}
     </script>
     <script src="pinyin-match.js"></script>
+  {{!-- github-calendar 已迁移为构建期抓取并注入（避免 runtime 依赖 unpkg + 代理服务） --}}
     <script src="script.js"></script>
 </body>
 </html>

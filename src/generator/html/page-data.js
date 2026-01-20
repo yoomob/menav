@@ -7,6 +7,7 @@ const {
 } = require('../cache/articles');
 const {
   tryLoadProjectsRepoCache,
+  tryLoadProjectsHeatmapCache,
   applyRepoMetaToCategories,
   buildProjectsMeta,
 } = require('../cache/projects');
@@ -61,6 +62,14 @@ function resolveTemplateName(pageId, data) {
 function applyProjectsData(data, pageId, config) {
   data.siteCardStyle = 'repo';
   data.projectsMeta = buildProjectsMeta(config);
+
+  const heatmapCache = tryLoadProjectsHeatmapCache(pageId, config);
+  if (data.projectsMeta && data.projectsMeta.heatmap && heatmapCache) {
+    data.projectsMeta.heatmap.html = heatmapCache.html;
+    data.projectsMeta.heatmap.generatedAt = heatmapCache.meta.generatedAt;
+    data.projectsMeta.heatmap.sourceUrl = heatmapCache.meta.sourceUrl;
+  }
+
   if (Array.isArray(data.categories)) {
     const repoCache = tryLoadProjectsRepoCache(pageId, config);
     if (repoCache && repoCache.map) {
