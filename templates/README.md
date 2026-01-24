@@ -31,6 +31,7 @@ templates/
 │   └── default.hbs   # 默认布局
 ├── pages/        # 页面模板 - 对应不同页面内容
 │   ├── page.hbs      # 通用页面模板（默认/回退模板；普通页面常用）
+│   ├── content.hbs    # 内容页（Markdown 内容页：构建期渲染）
 │   ├── projects.hbs  # 项目页（repo 风格卡片）
 │   ├── articles.hbs  # 文章页（RSS 聚合/只读文章条目）
 │   ├── bookmarks.hbs # 书签页
@@ -95,6 +96,7 @@ templates/
 **主要页面**:
 
 - `page.hbs` - 通用页面模板（默认/回退模板；普通页面常用）
+- `content.hbs` - 内容页（从本地 Markdown 文件构建期渲染为 HTML）
 - `bookmarks.hbs` - 书签页
 - `projects.hbs` - 项目页
 - `articles.hbs` - 文章页
@@ -103,6 +105,21 @@ templates/
 
 > 说明：MeNav 不再依赖 `home.hbs` 作为首页模板。
 > “首页/默认打开页”由 `site.yml -> navigation` 的**第一项**决定；首页可使用任意页面模板，具体取决于该页面配置（`pages/<homePageId>.yml` 的 `template` 字段与回退规则）。
+
+#### 内容页（template: content）
+
+内容页用于承载“关于 / 帮助 / 使用说明 / 更新日志 / 迁移指南”等纯文本内容。
+
+- 内容来源：页面配置中的 `content.file` 指向本地 `.md` 文件（例如 `content/about.md`）
+- 渲染时机：**构建期** Markdown -> HTML（不是运行时 fetch）
+- 安全约束：
+  - 禁止 raw HTML
+  - 禁止图片（`![]()` 不会被渲染）
+  - 链接会按 `site.yml -> security.allowedSchemes` 白名单策略处理，不安全链接会被降级为 `#`
+
+对应模板文件：`templates/pages/content.hbs`
+
+> 配置写法示例见：`config/README.md` 的“内容页（template: content）”。
 
 **示例** (`page.hbs`):
 

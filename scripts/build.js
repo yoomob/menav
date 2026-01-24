@@ -23,6 +23,19 @@ async function main() {
     return;
   }
 
+  // best-effort：同步失败不阻断 build
+  const syncProjectsExit = runNode(path.join(repoRoot, 'scripts', 'sync-projects.js'));
+  if (syncProjectsExit !== 0)
+    log.warn('sync-projects 异常退出，已继续（best-effort）', { exit: syncProjectsExit });
+
+  const syncHeatmapExit = runNode(path.join(repoRoot, 'scripts', 'sync-heatmap.js'));
+  if (syncHeatmapExit !== 0)
+    log.warn('sync-heatmap 异常退出，已继续（best-effort）', { exit: syncHeatmapExit });
+
+  const syncArticlesExit = runNode(path.join(repoRoot, 'scripts', 'sync-articles.js'));
+  if (syncArticlesExit !== 0)
+    log.warn('sync-articles 异常退出，已继续（best-effort）', { exit: syncArticlesExit });
+
   const generatorExit = runNode(path.join(repoRoot, 'src', 'generator.js'));
   if (generatorExit !== 0) {
     log.error('generate 失败', { exit: generatorExit });

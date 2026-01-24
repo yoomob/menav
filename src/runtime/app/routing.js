@@ -22,6 +22,20 @@ module.exports = function initRouting(state, dom, api) {
         }
       });
 
+      // 通知：页面已切换（供按需组件初始化，如 github-calendar）
+      // 注意：必须在 active class 切换之后触发，否则监听方可能认为页面仍不可见。
+      try {
+        document.dispatchEvent(
+          new CustomEvent('menav:pageChanged', {
+            detail: {
+              pageId,
+            },
+          })
+        );
+      } catch (error) {
+        // ignore
+      }
+
       // 初始加载完成后设置标志
       if (state.isInitialLoad) {
         state.isInitialLoad = false;

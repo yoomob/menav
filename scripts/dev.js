@@ -46,6 +46,10 @@ async function main() {
   if (syncProjectsExit !== 0)
     log.warn('sync-projects 异常退出，已继续（best-effort）', { exit: syncProjectsExit });
 
+  const syncHeatmapExit = runNode(path.join(repoRoot, 'scripts', 'sync-heatmap.js'));
+  if (syncHeatmapExit !== 0)
+    log.warn('sync-heatmap 异常退出，已继续（best-effort）', { exit: syncHeatmapExit });
+
   const syncArticlesExit = runNode(path.join(repoRoot, 'scripts', 'sync-articles.js'));
   if (syncArticlesExit !== 0)
     log.warn('sync-articles 异常退出，已继续（best-effort）', { exit: syncArticlesExit });

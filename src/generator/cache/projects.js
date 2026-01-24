@@ -5,6 +5,46 @@ const { createLogger } = require('../utils/logger');
 
 const log = createLogger('cache:projects');
 
+function tryLoadProjectsHeatmapCache(pageId, config) {
+  if (!pageId) return null;
+
+  const cacheDirFromEnv = process.env.PROJECTS_CACHE_DIR
+    ? String(process.env.PROJECTS_CACHE_DIR)
+    : '';
+  const cacheDirFromConfig =
+    config && config.site && config.site.github && config.site.github.cacheDir
+      ? String(config.site.github.cacheDir)
+      : '';
+  const cacheDir = cacheDirFromEnv || cacheDirFromConfig || 'dev';
+
+  const cacheBaseDir = path.isAbsolute(cacheDir) ? cacheDir : path.join(process.cwd(), cacheDir);
+  const cachePath = path.join(cacheBaseDir, `${pageId}.heatmap-cache.json`);
+  if (!fs.existsSync(cachePath)) return null;
+
+  try {
+    const raw = fs.readFileSync(cachePath, 'utf8');
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+
+    const username = parsed.username ? String(parsed.username).trim() : '';
+    const html = parsed.html ? String(parsed.html) : '';
+    if (!username || !html) return null;
+
+    return {
+      username,
+      html,
+      meta: {
+        pageId: parsed.pageId || pageId,
+        generatedAt: parsed.generatedAt || '',
+        sourceUrl: parsed.sourceUrl || '',
+      },
+    };
+  } catch (e) {
+    log.warn('heatmap 缓存读取失败，将降级为运行时加载', { path: cachePath });
+    return null;
+  }
+}
+
 function tryLoadProjectsRepoCache(pageId, config) {
   if (!pageId) return null;
 
@@ -135,6 +175,7 @@ function buildProjectsMeta(config) {
 
 module.exports = {
   tryLoadProjectsRepoCache,
+  tryLoadProjectsHeatmapCache,
   applyRepoMetaToCategories,
   buildProjectsMeta,
 };
