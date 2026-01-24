@@ -1,33 +1,55 @@
-/* 主题颜色变量 */
+/* 主题颜色变量 - Apple Design System */
 :root {
-  /* 深色主题（默认） */
-  --bg-color: #1a1b1e;
-  --sidebar-bg: #2d2e32;
-  --card-bg-gradient-1: #2f3035;
-  --card-bg-gradient-2: #2b2c30;
-  --site-card-bg-gradient-1: #363940;
-  --site-card-bg-gradient-2: #31343a;
-  --site-card-hover-bg: linear-gradient(145deg, #3f434b, #353940);
-  --text-color: #e4e6eb;
-  --text-muted: #8b8c8f;
+  /* 深色主题 (iOS Dark Mode Inspired) */
+  --bg-color: #000000;
+  /* Pure Black background */
+  --sidebar-bg: #1c1c1e;
+  /* System Gray 6 */
+  --secondary-bg: #2c2c2e;
+  /* System Gray 5 */
+
+  /* 卡片背景 - 仪表盘卡片 */
+  --card-bg-gradient-1: #1c1c1e;
+  --card-bg-gradient-2: #1c1c1e;
+
+  /* 站点卡片 - 提升亮度以区分层级 (Optimize: Use System Gray 5 for cards on black bg) */
+  --site-card-bg-gradient-1: #2c2c2e;
+  --site-card-bg-gradient-2: #2c2c2e;
+  --site-card-hover-bg: #3a3a3c;
+  /* System Gray 4 for hover */
+
+  /* 文字颜色 */
+  --text-color: #ffffff;
+  --text-muted: #8e8e93;
+  /* System Gray */
   --text-bright: #ffffff;
-  --border-color: rgba(255, 255, 255, 0.05);
-  --shadow-color: rgba(0, 0, 0, 0.15);
+
+  /* 边框与阴影 */
+  --border-color: rgba(255, 255, 255, 0.12);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+
+  /* 功能色 */
   --highlight-bg: rgba(118, 148, 185, 0.3);
-  --scrollbar-color: rgba(255, 255, 255, 0.15);
-  --scrollbar-hover-color: rgba(255, 255, 255, 0.25);
+  /* Restore original Highlight */
+  --scrollbar-color: rgba(255, 255, 255, 0.2);
+  --scrollbar-hover-color: rgba(255, 255, 255, 0.3);
+
+  /* 恢复原有强调色 (Restore Original Accent) */
   --accent-color: #7694b9;
   --accent-hover: #6684a9;
   --accent-rgb: 118, 148, 185;
-  --nav-item-color: #a1a2a5;
-  --success-color: #4caf50;
-  --error-color: #f44336;
+
+  --nav-item-color: #98989d;
+  --success-color: #30d158;
+  --error-color: #ff453a;
   --white-color: #ffffff;
+
+  /* 恢复原有渐变 (Restore Original Gradient) */
   --gradient-color: linear-gradient(135deg, #7694b9 0%, #a855f7 50%, #ff6b6b 100%);
   --gradient-color-simple: linear-gradient(135deg, #7694b9 0%, #a855f7 100%);
+
   --sidebar-width: 240px;
   --sidebar-collapsed-width: 60px;
-  /* 统一视口高度：由 JS 动态写入（移动端避免 100vh 被浏览器 UI 影响） */
   --app-height: 100vh;
 
   /* Spacing System */
@@ -38,62 +60,68 @@
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
 
-  /* 页面内容最大宽度（用于各页边界一致性） */
   --page-max-width: 1300px;
 
-  /* Border Radius */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  /* UI Tuning - Apple Style (Kept) */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
   --radius-full: 9999px;
 
-  /* Transitions */
+  /* Transitions - Kept iOS Spring */
   --transition-fast: 0.2s ease;
-  --transition-normal: 0.3s ease;
-  --transition-slow: 0.5s ease;
-  --transition-bounce: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+  --transition-slow: 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  --transition-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
-  /* RGB Values for opacity manipulation */
-  --card-bg-rgb: 47, 48, 53;
+  --card-bg-rgb: 28, 28, 30;
 }
 
-/* 浅色主题：预加载阶段同样应用变量，避免读取默认暗色值 */
+/* 浅色主题 - 恢复原有配色 (Restored Morandi/Warm) */
 html.theme-preload,
 body.light-theme {
   --bg-color: #e0e0d8;
   --sidebar-bg: #f0f0eb;
+  --secondary-bg: #e6e6e1;
+  /* Slightly darker than sidebar for hover state */
   --card-bg-gradient-1: #f0f0eb;
   --card-bg-gradient-2: #e9e9e4;
   --site-card-bg-gradient-1: #ffffff;
   --site-card-bg-gradient-2: #f4f5f0;
   --site-card-hover-bg: linear-gradient(145deg, #fafaf8, #eef0eb);
+
   --text-color: #333333;
   --text-muted: #666666;
   --text-bright: #000000;
+
   --border-color: rgba(0, 0, 0, 0.08);
   --shadow-color: rgba(0, 0, 0, 0.1);
+
   --highlight-bg: rgba(118, 148, 185, 0.15);
   --scrollbar-color: rgba(0, 0, 0, 0.1);
   --scrollbar-hover-color: rgba(0, 0, 0, 0.2);
+
   --accent-color: #7694b9;
   --accent-hover: #6684a9;
   --accent-rgb: 118, 148, 185;
+
   --nav-item-color: #666666;
   --success-color: #4caf50;
   --error-color: #f44336;
   --white-color: #ffffff;
+
+  /* Restore original gradients */
   --gradient-color: linear-gradient(135deg, #7694b9 0%, #a855f7 50%, #ff6b6b 100%);
   --gradient-color-simple: linear-gradient(135deg, #7694b9 0%, #a855f7 100%);
+
   --card-bg-rgb: 240, 240, 235;
 }
 
 /* 预加载主题 - 在JS完全加载前显示正确的主题 */
 html.theme-preload body {
   background-color: #e0e0d8;
-  /* 明亮主题背景色 */
   color: #333333;
-  /* 明亮主题文本色 */
 }
 
 /* 预加载侧边栏状态 - 在JS完全加载前显示正确的侧边栏宽度 */
@@ -127,7 +155,7 @@ html.preload * {
   border: 0;
 }
 
-/* 主题切换按钮 */
+/* 主题切换按钮 - 调整为 iOS 风格 */
 .theme-toggle {
   position: fixed;
   bottom: var(--spacing-xl);
@@ -160,6 +188,10 @@ html.preload * {
 .theme-toggle:active {
   transform: translateY(0);
   box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.theme-toggle i {
+  font-size: 18px;
 }
 
 /* 全局样式 */
@@ -1378,6 +1410,41 @@ body main.content.expanded {
     filter: drop-shadow(0 0 4px rgba(118, 148, 185, 0.4))
       drop-shadow(0 0 8px rgba(168, 85, 247, 0.4));
   }
+}
+
+.site-card {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  /* More generous padding */
+  gap: 0.8rem;
+  background-color: var(--site-card-bg-gradient-1);
+  /* Solid color */
+  border-radius: var(--radius-lg);
+  /* Larger radius */
+  text-decoration: none;
+  color: var(--text-color);
+  transition:
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal),
+    background-color var(--transition-normal);
+  /* Spring transition */
+  position: relative;
+  overflow: hidden;
+  border: 0.5px solid var(--border-color);
+  /* Subtle separator */
+  /* Remove hard shadow by default for cleaner look, only adding on hover or using very subtle depth */
+}
+
+.site-card:hover {
+  transform: translateY(-2px) scale(1.01);
+  /* Subtle scale */
+  background-color: var(--site-card-hover-bg);
+  box-shadow: 0 8px 20px var(--shadow-color);
+  /* Deep soft shadow */
+  z-index: 2;
+  border-color: transparent;
+  /* Merge with shadow */
 }
 
 /* 分类样式 */
@@ -3910,25 +3977,34 @@ body.light-theme .page-template-projects .gh-heatmap-category {
 }
 
 .welcome-title {
-  font-size: 3rem;
-  font-family: var(--font-heading, serif);
-  font-style: italic;
-  color: var(--accent-color);
-  line-height: 1;
+  font-size: 3.5rem;
+  font-family: var(--font-heading, var(--font-body, sans-serif));
+  font-weight: 800;
+  /* Extra Bold */
+  font-style: normal;
+  /* Remove italic */
+  text-transform: uppercase;
+  /* Pop Style */
+  letter-spacing: -0.03em;
+  /* Tight spacing */
+  color: var(--text-color);
+  /* Use primary text color, accent reserved for highlights */
+  line-height: 0.95;
   margin: 0;
   padding-left: var(--spacing-xl);
   /* Shift right */
 }
 
 .welcome-subtitle {
-  font-size: 1rem;
-  letter-spacing: 0.2em;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  font-weight: 500;
-  margin-top: 0.5rem;
+  color: var(--accent-color);
+  /* Accent color for subtitle */
+  font-weight: 600;
+  margin-top: 1rem;
   padding-left: var(--spacing-xl);
-  /* Shift right */
+  opacity: 0.9;
 }
 
 @media (min-width: 768px) {
@@ -3944,26 +4020,31 @@ body.light-theme .page-template-projects .gh-heatmap-category {
   }
 }
 
-/* Clock Card - Optimized Layout */
+/* Clock Card - Apple Style: Flat + Soft Shadow */
 .dashboard-clock-card {
   position: relative;
   background-color: var(--card-bg-gradient-1);
-  border: 1px solid var(--border-color);
+  /* Solid color, no gradient needed for flat look */
+  border: 0.5px solid var(--border-color);
+  /* Very subtle border */
   border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   flex: 1;
-  box-shadow: 4px 4px 0px 0px rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 24px var(--shadow-color);
+  /* Soft, diffused shadow */
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal);
   overflow: hidden;
-  padding: var(--spacing-md);
+  padding: var(--spacing-xl);
+  /* More padding for spatial luxury */
 }
 
 body.light-theme .dashboard-clock-card {
-  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  /* Lighter shadow for light mode */
 }
 
 .clock-header {
@@ -4195,7 +4276,29 @@ body.light-theme .dashboard-panel {
 }
 
 /* Light Mode Overrides for Specific Dashboard Colors if needed */
-body.light-theme .welcome-title {
-  /* Ensure visibility if default accent is too light on light bg, 
-       but var(--accent-color) usually handles this. */
+
+@media (max-width: 768px) {
+  /* 移动端隐藏首页的时间卡片和Todo面板 */
+  .dashboard-clock-card,
+  .dashboard-stats {
+    display: none !important;
+  }
+
+  /* 调整移动端首页欢迎语布局 */
+  .dashboard-intro {
+    height: auto;
+    gap: 0;
+    margin-bottom: var(--spacing-md);
+  }
+
+  /* 适当减小欢迎语字号 */
+  .welcome-title {
+    font-size: 2.5rem;
+    padding-left: 1rem;
+  }
+
+  .welcome-subtitle {
+    padding-left: 1rem;
+    margin-top: 0.5rem;
+  }
 }
